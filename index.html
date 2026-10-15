@@ -92,6 +92,54 @@ body.no-animations *,body.no-animations *::before,body.no-animations *::after{an
 body.large-text .message-body{font-size:15px}
 body.xlarge-text .message-body{font-size:16px}
 #appearancePanel,#personalityPanel,#memoryPanel{scroll-margin-top:10px}
+/* Ogni tema mobile cambia l'atmosfera dell'intera interfaccia, non solo il colore del testo. */
+@media(max-width:700px){
+body[data-theme="blue"]{background:radial-gradient(ellipse at 50% -20%,#164d86,transparent 58%),linear-gradient(160deg,#07111e,#060a13 75%);--bg:#060a13;--panel:#0b1423;--border:#76baff24;--muted:#8ea9c8}
+body[data-theme="pink"]{background:radial-gradient(ellipse at 50% -20%,#7b245f,transparent 58%),linear-gradient(160deg,#1b0919,#100711 75%);--bg:#100711;--panel:#1b0d1c;--border:#ff9be52a;--muted:#c19ab8}
+body[data-theme="mint"]{background:radial-gradient(ellipse at 50% -20%,#155b4d,transparent 58%),linear-gradient(160deg,#071813,#06110f 75%);--bg:#06110f;--panel:#0c1c18;--border:#76f0ca25;--muted:#8fb9ad}
+body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d,transparent 58%),linear-gradient(160deg,#1b1008,#100b07 75%);--bg:#100b07;--panel:#1b120c;--border:#ffc08026;--muted:#c4a48a}
+body[data-theme="purple"]{background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg)}
+body[data-theme="blue"] .sidebar,body[data-theme="blue"] #settingsModal .modal,body[data-theme="blue"] #devicesModal .modal{background:linear-gradient(155deg,#0c1b30f7,#080d18f8)}
+body[data-theme="pink"] .sidebar,body[data-theme="pink"] #settingsModal .modal,body[data-theme="pink"] #devicesModal .modal{background:linear-gradient(155deg,#281127f7,#100812f8)}
+body[data-theme="mint"] .sidebar,body[data-theme="mint"] #settingsModal .modal,body[data-theme="mint"] #devicesModal .modal{background:linear-gradient(155deg,#10251ff7,#07110ef8)}
+body[data-theme="orange"] .sidebar,body[data-theme="orange"] #settingsModal .modal,body[data-theme="orange"] #devicesModal .modal{background:linear-gradient(155deg,#2b1a0df7,#100b07f8)}
+body[data-theme="blue"] .topbar{background:#07111eaa}
+body[data-theme="pink"] .topbar{background:#1b0919aa}
+body[data-theme="mint"] .topbar{background:#071813aa}
+body[data-theme="orange"] .topbar{background:#1b1008aa}
+body[data-theme="blue"] .new-chat,body[data-theme="blue"] .primary,body[data-theme="blue"] .action,body[data-theme="blue"] .settings-form .action{border-color:#3977b5;background:linear-gradient(120deg,#174d83,#102a4b)}
+body[data-theme="pink"] .new-chat,body[data-theme="pink"] .primary,body[data-theme="pink"] .action,body[data-theme="pink"] .settings-form .action{border-color:#9c3d80;background:linear-gradient(120deg,#74245e,#3d1738)}
+body[data-theme="mint"] .new-chat,body[data-theme="mint"] .primary,body[data-theme="mint"] .action,body[data-theme="mint"] .settings-form .action{border-color:#287e68;background:linear-gradient(120deg,#17604e,#10382f)}
+body[data-theme="orange"] .new-chat,body[data-theme="orange"] .primary,body[data-theme="orange"] .action,body[data-theme="orange"] .settings-form .action{border-color:#9e5d2b;background:linear-gradient(120deg,#87451e,#482613)}
+body[data-theme="blue"] .composer{border-color:#55a7a755;background:#0d1829f2}
+body[data-theme="pink"] .composer{border-color:#ec72d555;background:#201020f2}
+body[data-theme="mint"] .composer{border-color:#55d6b055;background:#0d201af2}
+body[data-theme="orange"] .composer{border-color:#ffad5c55;background:#20140bf2}
+body[data-theme="blue"] .avatar{background:#122b48}
+body[data-theme="pink"] .avatar{background:#351631}
+body[data-theme="mint"] .avatar{background:#12372d}
+body[data-theme="orange"] .avatar{background:#3b2413}
+body[data-theme="blue"] .message-name,body[data-theme="blue"] .gradient{color:#8ecbff;background-image:linear-gradient(100deg,#d7efff,#55a7ff,#6ee7ff)}
+body[data-theme="pink"] .message-name,body[data-theme="pink"] .gradient{color:#ff9be5;background-image:linear-gradient(100deg,#ffe0f6,#ec72d5,#ff91a8)}
+body[data-theme="mint"] .message-name,body[data-theme="mint"] .gradient{color:#8af0d0;background-image:linear-gradient(100deg,#d6fff0,#55d6b0,#b0ff9e)}
+body[data-theme="orange"] .message-name,body[data-theme="orange"] .gradient{color:#ffc080;background-image:linear-gradient(100deg,#ffe5c6,#ffad5c,#ffdf75)}
+body[data-theme="blue"] .hero-logo{filter:drop-shadow(0 0 28px #368dff77)}
+body[data-theme="pink"] .hero-logo{filter:drop-shadow(0 0 28px #ff4fce77)}
+body[data-theme="mint"] .hero-logo{filter:drop-shadow(0 0 28px #43e7b177)}
+body[data-theme="orange"] .hero-logo{filter:drop-shadow(0 0 28px #ff9d4377)}
+body[data-theme="blue"] .history-row:hover,body[data-theme="blue"] .history-row.active{background:#55a7ff20}
+body[data-theme="pink"] .history-row:hover,body[data-theme="pink"] .history-row.active{background:#ec72d520}
+body[data-theme="mint"] .history-row:hover,body[data-theme="mint"] .history-row.active{background:#55d6b020}
+body[data-theme="orange"] .history-row:hover,body[data-theme="orange"] .history-row.active{background:#ffad5c20}
+body[data-theme="blue"] #settingsModal .setting-card,body[data-theme="blue"] #settingsModal .panel{background:linear-gradient(130deg,#14263d,#0b1422);border-color:#55a7ff2b}
+body[data-theme="pink"] #settingsModal .setting-card,body[data-theme="pink"] #settingsModal .panel{background:linear-gradient(130deg,#30182f,#170d1b);border-color:#ec72d52b}
+body[data-theme="mint"] #settingsModal .setting-card,body[data-theme="mint"] #settingsModal .panel{background:linear-gradient(130deg,#17332a,#0b1713);border-color:#55d6b02b}
+body[data-theme="orange"] #settingsModal .setting-card,body[data-theme="orange"] #settingsModal .panel{background:linear-gradient(130deg,#382315,#1b1009);border-color:#ffad5c2b}
+body[data-theme="blue"] #settingsModal .field{background:#0b1728;border-color:#3977b5}
+body[data-theme="pink"] #settingsModal .field{background:#180d1b;border-color:#9c3d80}
+body[data-theme="mint"] #settingsModal .field{background:#091712;border-color:#287e68}
+body[data-theme="orange"] #settingsModal .field{background:#170e08;border-color:#9e5d2b}
+}
 /* Impostazioni mobile: layout dedicato, senza cambiare la versione desktop. */
 @media(max-width:700px){
 #settingsModal .modal{
@@ -212,7 +260,7 @@ body.xlarge-text .message-body{font-size:16px}
     <h3>🎨 Aspetto</h3><p class="muted">Le preferenze vengono salvate su questo browser.</p>
     <div class="settings-form">
       <label for="accentColor">Colore principale</label>
-      <select class="field" id="accentColor"><option value="#a477ff">Viola Lumia</option><option value="#55a7ff">Blu elettrico</option><option value="#ec72d5">Rosa neon</option><option value="#55d6b0">Verde menta</option><option value="#ffad5c">Arancione</option></select>
+      <select class="field" id="accentColor"><option value="purple">Viola Lumia</option><option value="blue">Blu elettrico</option><option value="pink">Rosa neon</option><option value="mint">Verde menta</option><option value="orange">Arancione</option></select>
       <label for="fontSize">Dimensione del testo</label>
       <select class="field" id="fontSize"><option value="14">Standard</option><option value="15">Grande</option><option value="16">Molto grande</option></select>
       <label class="check-row"><input type="checkbox" id="animationsEnabled" checked> Attiva animazioni e movimento del logo</label>
@@ -287,7 +335,7 @@ body.xlarge-text .message-body{font-size:16px}
 const $=id=>document.getElementById(id);
 const STORAGE_KEY="lumia_ai_conversations_v1";
 const SETTINGS_KEY="lumia_ai_preferences_v1";
-const DEFAULT_SETTINGS={accentColor:"#a477ff",fontSize:"14",animationsEnabled:true,responseTone:"friendly",responseLength:"balanced",customInstructions:"",personalMemory:""};
+const DEFAULT_SETTINGS={accentColor:"purple",fontSize:"14",animationsEnabled:true,responseTone:"friendly",responseLength:"balanced",customInstructions:"",personalMemory:""};
 function loadSettings(){
   try{return {...DEFAULT_SETTINGS,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")}}catch{return {...DEFAULT_SETTINGS}}
 }
@@ -315,10 +363,18 @@ function saveConversations(){
 }
 function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));return true}catch(e){alert("Impossibile salvare le impostazioni in questo browser.");return false}}
 function applyAppearance(){
-  document.documentElement.style.setProperty("--purple",settings.accentColor||DEFAULT_SETTINGS.accentColor);
+  const themes={purple:"#a477ff",blue:"#55a7ff",pink:"#ec72d5",mint:"#55d6b0",orange:"#ffad5c"};
+  // Compatibilità con le vecchie preferenze che salvavano il codice esadecimale.
+  const legacy={"#a477ff":"purple","#55a7ff":"blue","#ec72d5":"pink","#55d6b0":"mint","#ffad5c":"orange"};
+  if(legacy[settings.accentColor])settings.accentColor=legacy[settings.accentColor];
+  if(!themes[settings.accentColor])settings.accentColor="purple";
+  document.documentElement.style.setProperty("--purple",themes[settings.accentColor]);
+  document.body.dataset.theme=settings.accentColor;
   document.body.classList.toggle("no-animations",!settings.animationsEnabled);
   document.body.classList.toggle("large-text",settings.fontSize==="15");
   document.body.classList.toggle("xlarge-text",settings.fontSize==="16");
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.content=({purple:"#090711",blue:"#07111e",pink:"#1b0919",mint:"#071813",orange:"#1b1008"})[settings.accentColor];
 }
 function fillSettingsForm(){
   $("accentColor").value=settings.accentColor;
