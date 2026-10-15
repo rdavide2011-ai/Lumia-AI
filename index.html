@@ -83,6 +83,15 @@ textarea::placeholder{color:#777086}
 video{display:block;width:100%;max-height:300px;background:#000;border-radius:12px}
 .list-preview{max-height:180px;overflow:auto;padding-left:20px;font-size:12px;line-height:1.8}
 .check-row{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.6}
+.settings-form{display:grid;gap:10px;margin-top:14px}
+.settings-form>label:not(.check-row){font-size:12px;color:#c9bddc;margin-top:4px}
+.settings-form .field{min-width:0}
+.settings-form textarea{min-height:86px;resize:vertical;line-height:1.5}
+.settings-form .action{margin-top:2px}
+body.no-animations *,body.no-animations *::before,body.no-animations *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+body.large-text .message-body{font-size:15px}
+body.xlarge-text .message-body{font-size:16px}
+#appearancePanel,#personalityPanel,#memoryPanel{scroll-margin-top:10px}
 @media(max-width:700px){
 .sidebar{position:fixed;z-index:40;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;transform:translateX(-105%);transition:transform .25s;box-shadow:15px 0 45px #0006}
 .sidebar.open{transform:translateX(0)}
@@ -143,10 +152,47 @@ video{display:block;width:100%;max-height:300px;background:#000;border-radius:12
 <div class="modal">
   <div class="modal-head"><div><h2>Impostazioni</h2><div class="muted">Gestisci Lumia AI e i tuoi dispositivi.</div></div><button class="close" data-close="settingsModal">✕</button></div>
   <div class="settings-grid">
+    <div class="setting-card"><h3>🎨 Aspetto</h3><p class="muted">Personalizza colori, animazioni e dimensione del testo.</p><button class="action" id="openAppearance">Personalizza aspetto</button></div>
+    <div class="setting-card"><h3>✦ Personalità</h3><p class="muted">Scegli come Lumia comunica e risponde.</p><button class="action" id="openPersonality">Personalizza risposte</button></div>
+    <div class="setting-card"><h3>🧠 Memoria</h3><p class="muted">Gestisci le informazioni che Lumia usa per personalizzare le risposte e le tue chat locali.</p><button class="action" id="openMemory">Gestisci memoria</button></div>
     <div class="setting-card"><h3>📱 Dispositivi</h3><p class="muted">Trasferisci le tue conversazioni su un altro dispositivo.</p><button class="action" id="openDevices">Gestisci dispositivi</button></div>
-    <div class="setting-card"><h3>🔐 Privacy</h3><p class="muted">Le conversazioni rimangono nel browser, finché non scegli di trasferirle.</p><button class="action secondary" id="privacyInfo">Informazioni privacy</button></div>
+    <div class="setting-card"><h3>🔐 Privacy</h3><p class="muted">Scopri come vengono gestiti i tuoi dati.</p><button class="action secondary" id="privacyInfo">Informazioni privacy</button></div>
   </div>
-  <div class="panel" id="privacyPanel" hidden><p class="muted">Il trasferimento richiede il server Lumia per consegnare temporaneamente i dati al secondo dispositivo. Il codice è monouso e scade dopo 10 minuti. Durante il trasferimento le chat transitano dal server: non è un collegamento diretto dispositivo-dispositivo.</p></div>
+  <div class="panel" id="appearancePanel" hidden>
+    <h3>🎨 Aspetto</h3><p class="muted">Le preferenze vengono salvate su questo browser.</p>
+    <div class="settings-form">
+      <label for="accentColor">Colore principale</label>
+      <select class="field" id="accentColor"><option value="#a477ff">Viola Lumia</option><option value="#55a7ff">Blu elettrico</option><option value="#ec72d5">Rosa neon</option><option value="#55d6b0">Verde menta</option><option value="#ffad5c">Arancione</option></select>
+      <label for="fontSize">Dimensione del testo</label>
+      <select class="field" id="fontSize"><option value="14">Standard</option><option value="15">Grande</option><option value="16">Molto grande</option></select>
+      <label class="check-row"><input type="checkbox" id="animationsEnabled" checked> Attiva animazioni e movimento del logo</label>
+      <button class="action" id="saveAppearance">Salva aspetto</button>
+    </div>
+  </div>
+  <div class="panel" id="personalityPanel" hidden>
+    <h3>✦ Personalità di Lumia</h3><p class="muted">Queste preferenze influenzano le prossime risposte dell'AI.</p>
+    <div class="settings-form">
+      <label for="responseTone">Stile di comunicazione</label>
+      <select class="field" id="responseTone"><option value="friendly">Amichevole e naturale</option><option value="professional">Professionale</option><option value="direct">Diretto e sintetico</option><option value="creative">Creativo ed espressivo</option></select>
+      <label for="responseLength">Lunghezza delle risposte</label>
+      <select class="field" id="responseLength"><option value="balanced">Equilibrata</option><option value="short">Breve</option><option value="detailed">Dettagliata</option></select>
+      <label for="customInstructions">Istruzioni personalizzate</label>
+      <textarea class="field" id="customInstructions" rows="3" maxlength="1200" placeholder="Es. Spiegami gli argomenti con esempi semplici..."></textarea>
+      <button class="action" id="savePersonality">Salva personalità</button>
+    </div>
+  </div>
+  <div class="panel" id="memoryPanel" hidden>
+    <h3>🧠 Memoria personale</h3><p class="muted">Scrivi informazioni utili che vuoi che Lumia tenga presenti nelle prossime risposte. La memoria è salvata solo in questo browser e viene inviata al server insieme alle richieste AI.</p>
+    <div class="settings-form">
+      <label for="personalMemory">Informazioni da ricordare</label>
+      <textarea class="field" id="personalMemory" rows="4" maxlength="2000" placeholder="Es. Preferisco risposte in italiano, brevi e con passaggi numerati..."></textarea>
+      <div class="status" id="memoryStats">Calcolo delle conversazioni salvate…</div>
+      <button class="action" id="saveMemory">Salva memoria</button>
+      <button class="action secondary" id="exportChats">Esporta tutte le conversazioni (JSON)</button>
+      <button class="action secondary" id="deleteAllChats">Elimina tutte le conversazioni</button>
+    </div>
+  </div>
+  <div class="panel" id="privacyPanel" hidden><p class="muted">Le conversazioni e la memoria personale vengono conservate nel browser. Quando invii un messaggio, il testo della conversazione e le preferenze pertinenti vengono inviati al server AI per generare la risposta. Il trasferimento tra dispositivi passa temporaneamente dal server: il codice è monouso e scade dopo 10 minuti.</p></div>
 </div>
 </div>
 
@@ -190,6 +236,12 @@ video{display:block;width:100%;max-height:300px;background:#000;border-radius:12
 "use strict";
 const $=id=>document.getElementById(id);
 const STORAGE_KEY="lumia_ai_conversations_v1";
+const SETTINGS_KEY="lumia_ai_preferences_v1";
+const DEFAULT_SETTINGS={accentColor:"#a477ff",fontSize:"14",animationsEnabled:true,responseTone:"friendly",responseLength:"balanced",customInstructions:"",personalMemory:""};
+function loadSettings(){
+  try{return {...DEFAULT_SETTINGS,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")}}catch{return {...DEFAULT_SETTINGS}}
+}
+let settings=loadSettings();
 let conversations=loadConversations(),currentId=null,busy=false;
 let outgoingToken=null,outgoingCode=null,expiryTimer=null,expiryAt=0;
 let pendingImport=null,scannerStream=null,scannerTimer=null,scannerActive=false;
@@ -210,6 +262,37 @@ function saveConversations(){
     $("disclaimer").textContent="Le chat sono salvate su questo browser.";
     return true;
   }catch(e){$("disclaimer").textContent="Errore: impossibile salvare le chat nel browser.";return false}
+}
+function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));return true}catch(e){alert("Impossibile salvare le impostazioni in questo browser.");return false}}
+function applyAppearance(){
+  document.documentElement.style.setProperty("--purple",settings.accentColor||DEFAULT_SETTINGS.accentColor);
+  document.body.classList.toggle("no-animations",!settings.animationsEnabled);
+  document.body.classList.toggle("large-text",settings.fontSize==="15");
+  document.body.classList.toggle("xlarge-text",settings.fontSize==="16");
+}
+function fillSettingsForm(){
+  $("accentColor").value=settings.accentColor;
+  $("fontSize").value=settings.fontSize;
+  $("animationsEnabled").checked=!!settings.animationsEnabled;
+  $("responseTone").value=settings.responseTone;
+  $("responseLength").value=settings.responseLength;
+  $("customInstructions").value=settings.customInstructions||"";
+  $("personalMemory").value=settings.personalMemory||"";
+  updateMemoryStats();
+}
+function hideSettingsPanels(){
+  ["appearancePanel","personalityPanel","memoryPanel","privacyPanel"].forEach(id=>$(id).hidden=true);
+}
+function openSettingsPanel(id){
+  hideSettingsPanels();
+  $(id).hidden=false;
+  if(id==="memoryPanel")updateMemoryStats();
+  $(id).scrollIntoView({behavior:settings.animationsEnabled?"smooth":"auto",block:"nearest"});
+}
+function updateMemoryStats(){
+  const count=conversations.length;
+  const messages=conversations.reduce((sum,c)=>sum+(Array.isArray(c.messages)?c.messages.length:0),0);
+  $("memoryStats").textContent=`Su questo browser: ${count} conversazioni, ${messages} messaggi. La memoria personale contiene ${(settings.personalMemory||"").length}/2000 caratteri.`;
 }
 function current(){return conversations.find(c=>c.id===currentId)}
 function showWelcome(){ $("welcome").hidden=false;$("messages").hidden=true;$("messages").replaceChildren() }
@@ -259,7 +342,7 @@ async function sendMessage(raw){
   const typing=document.createElement("div");typing.className="message";typing.id="typing";
   typing.innerHTML='<div class="avatar">✦</div><div class="message-body"><div class="message-name">Lumia AI</div><div class="message-text">Lumia sta pensando…</div></div>';$("messages").append(typing);
   try{
-    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content}))})});
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})),preferences:{responseTone:settings.responseTone,responseLength:settings.responseLength,customInstructions:settings.customInstructions,personalMemory:settings.personalMemory}})});
     if(!r.ok){let t=await r.text();try{t=JSON.parse(t).error||t}catch{}throw Error(t||"Servizio AI non disponibile")}
     let answer="";
     if((r.headers.get("content-type")||"").includes("application/json")){const d=await r.json();answer=d.reply||d.response||d.message||""}
@@ -286,7 +369,36 @@ function closeModal(name){$(name).hidden=true}
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 $("settingsBtn").onclick=()=>openModal("settingsModal");
 $("openDevices").onclick=()=>{closeModal("settingsModal");openModal("devicesModal");$("receivePanel").hidden=true;if(conversations.length){createTransfer()}else{$("sendPanel").hidden=false;$("qr").textContent="Nessuna chat da condividere";$("transferCode").textContent="--------";$("transferCountdown").textContent="Invia almeno un messaggio a Lumia per creare un trasferimento."}};
-$("privacyInfo").onclick=()=>{$("privacyPanel").hidden=!$("privacyPanel").hidden};
+$("privacyInfo").onclick=()=>{const opening=$("privacyPanel").hidden;hideSettingsPanels();$("privacyPanel").hidden=!opening};
+$("openAppearance").onclick=()=>openSettingsPanel("appearancePanel");
+$("openPersonality").onclick=()=>openSettingsPanel("personalityPanel");
+$("openMemory").onclick=()=>openSettingsPanel("memoryPanel");
+$("saveAppearance").onclick=()=>{
+  settings.accentColor=$("accentColor").value;
+  settings.fontSize=$("fontSize").value;
+  settings.animationsEnabled=$("animationsEnabled").checked;
+  if(saveSettings()){applyAppearance();$("saveAppearance").textContent="Salvato ✓";setTimeout(()=>$("saveAppearance").textContent="Salva aspetto",1500)}
+};
+$("savePersonality").onclick=()=>{
+  settings.responseTone=$("responseTone").value;
+  settings.responseLength=$("responseLength").value;
+  settings.customInstructions=$("customInstructions").value.trim().slice(0,1200);
+  if(saveSettings()){$("savePersonality").textContent="Salvato ✓";setTimeout(()=>$("savePersonality").textContent="Salva personalità",1500)}
+};
+$("saveMemory").onclick=()=>{
+  settings.personalMemory=$("personalMemory").value.trim().slice(0,2000);
+  if(saveSettings()){updateMemoryStats();$("saveMemory").textContent="Salvato ✓";setTimeout(()=>$("saveMemory").textContent="Salva memoria",1500)}
+};
+$("exportChats").onclick=()=>{
+  const payload={exportedAt:new Date().toISOString(),app:"Lumia AI",conversations,preferences:settings};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="lumia-ai-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$("deleteAllChats").onclick=()=>{
+  if(!conversations.length){alert("Non ci sono conversazioni da eliminare.");return}
+  if(!confirm("Vuoi eliminare definitivamente tutte le conversazioni salvate in questo browser? La memoria personale e le impostazioni resteranno. Questa operazione non si può annullare."))return;
+  conversations=[];currentId=null;saveConversations();renderHistory();showWelcome();updateMemoryStats();alert("Tutte le conversazioni sono state eliminate.");
+};
 $("openReceive").onclick=()=>{$("receivePanel").hidden=false;$("sendPanel").hidden=true;$("importPreview").hidden=true;$("receiveStatus").textContent="Scegli Scansiona QR Code oppure inserisci il codice di 8 cifre.";stopScanner()};
 $("createTransfer").onclick=createTransfer;
 $("cancelTransfer").onclick=cancelTransfer;
@@ -411,7 +523,7 @@ $("sidebarShade").onclick=closeSidebar;
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o){if(o.id==="devicesModal")stopScanner();o.hidden=true}}));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".overlay").forEach(o=>o.hidden=true);stopScanner();closeSidebar()}});
 window.addEventListener("beforeunload",stopScanner);
-renderHistory();showWelcome();
+applyAppearance();fillSettingsForm();renderHistory();showWelcome();
 </script>
 </body>
 </html>
