@@ -398,12 +398,16 @@ function applyAppearance(){
   document.body.classList.toggle("no-animations",!settings.animationsEnabled);
   document.body.classList.toggle("large-text",settings.fontSize==="15");
   document.body.classList.toggle("xlarge-text",settings.fontSize==="16");
-  // Il logo mantiene la sua forma, ma l'alone e la tonalità seguono il tema.
-  document.querySelectorAll('.hero-logo,.brand img,.mobile-brand img').forEach(img=>{
-    img.style.filter=(settings.accentColor==="purple"?"":t.filter+" ")+"drop-shadow(0 0 24px "+t.glow+"88)";
+  // Sul telefono usa il file logo dedicato al tema; su desktop lascia logo e grafica originali.
+  const mobile=window.matchMedia("(max-width: 700px)").matches;
+  const logoFiles={purple:"/logo.png",blue:"/logo-bluelettronico.png",pink:"/logo-rosaneon.png",mint:"/logo-verdementa.png",orange:"/logo-arancione.png"};
+  document.querySelectorAll(".hero-logo,.mobile-brand img").forEach(img=>{
+    img.src=mobile?logoFiles[settings.accentColor]:"/logo.png";
+    img.style.filter=mobile?"drop-shadow(0 0 24px "+t.glow+"99)":"";
   });
+  // La barra del browser mobile si abbina al tema scelto.
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.content=t.meta;
+  if(meta)meta.content=mobile?t.meta:"#090711";
 }
 function fillSettingsForm(){
   $("accentColor").value=settings.accentColor;
@@ -659,6 +663,7 @@ document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".overlay").forEach(o=>o.hidden=true);stopScanner();closeSidebar()}});
 window.addEventListener("beforeunload",stopScanner);
 applyAppearance();fillSettingsForm();renderHistory();showWelcome();
+window.addEventListener("resize",applyAppearance);
 </script>
 </body>
 </html>
