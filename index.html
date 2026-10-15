@@ -524,4 +524,408 @@ textarea::placeholder { color: #777086; }
 
     <footer class="composer-area">
       <form class="composer" id="composer">
-        <textarea id="prompt" rows="1" placeholder
+        <textarea id="prompt" rows="1" placeholder="Scrivi un messaggio a Lumia..." aria-label="Messaggio"></textarea>
+
+        <div class="composer-bottom">
+          <span class="composer-hint">INVIO per inviare · SHIFT + INVIO per andare a capo</span>
+          <button class="send" id="send" type="submit" aria-label="Invia messaggio">↑</button>
+        </div>
+      </form>
+
+      <div class="disclaimer" id="disclaimer">
+        Lumia AI · Le conversazioni sono salvate su questo browser.
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "lumia_ai_conversations_v1";
+
+const chat = $("chat");
+const welcome = $("welcome");
+const messagesBox = $("messages");
+const promptBox = $("prompt");
+const historyBox = $("history");
+const sendButton = $("send");
+
+let conversations = loadConversations();
+let currentId = null;
+let busy = false;
+
+function loadConversations() {
+  try {
+    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveConversations() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  } catch (error) {
+    console.error("Errore salvataggio cronologia:", error);
+  }
+}
+
+function currentConversation() {
+  return conversations.find(conversation => conversation.id === currentId);
+}
+
+function newConversation() {
+  if (busy) return;
+
+  currentId = crypto.randomUUID();
+
+  conversations.unshift({
+    id: currentId,
+    title: "Nuova conversazione",
+    messages: []
+  });
+
+  saveConversations();
+  renderHistory();
+  renderMessages();
+  promptBox.focus();
+  $("sidebar").classList.remove("open");
+}
+
+function deleteConversation(id) {
+  if (busy) return;
+
+  conversations = conversations.filter(conversation => conversation.id !== id);
+
+  if (currentId === id) {
+    currentId = conversations[0]?.id || null;
+  }
+
+  saveConversations();
+  renderHistory();
+
+  if (!currentId) {
+    showWelcome();
+  } else {
+    renderMessages();
+  }
+}
+
+function renderHistory() {
+  historyBox.replaceChildren();
+
+  conversations.forEach(conversation => {
+    const row = document.createElement("div");
+    row.className = "history-row";
+
+    const select = document.createElement("button");
+    select.className = "history-item" +
+      (conversation.id === currentId ? " active" : "");
+
+    const title = document.createElement("span");
+    title.className = "history-title";
+    title.textContent = "▱  " + conversation.title;
+
+    select.appendChild(title);
+
+    select.addEventListener("click", () => {
+      if (busy) return;
+
+      currentId = conversation.id;
+      renderHistory();
+      renderMessages();
+      $("sidebar").classList.remove("open");
+    });
+
+    const remove = document.createElement("button");
+    remove.className = "history-delete";
+    remove.textContent = "×";
+    remove.title = "Elimina conversazione";
+    remove.setAttribute("aria-label", "Elimina " + conversation.title);
+
+    remove.addEventListener("click", () => {
+      deleteConversation(conversation.id);
+    });
+
+    row.append(select, remove);
+    historyBox.appendChild(row);
+  });
+}
+
+function showWelcome() {
+  welcome.hidden = false;
+  messagesBox.hidden = true;
+  messagesBox.replaceChildren();
+}
+
+function renderMessages() {
+  const conversation = currentConversation();
+
+  if (!conversation || !conversation.messages.length) {
+    showWelcome();
+    return;
+  }
+
+  welcome.hidden = true;
+  messagesBox.hidden = false;
+  messagesBox.replaceChildren();
+
+  conversation.messages.forEach(message => {
+    const row = document.createElement("div");
+    row.className = "message " + message.role +
+      (message.error ? " error" : "");
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+
+    if (message.role === "user") {
+      avatar.textContent = "Tu";
+    } else {
+      const logo = document.createElement("img");
+      logo.src = "/logo.png";
+      logo.alt = "Lumia AI";
+      logo.className = "thinking-logo";
+      logo.style.animation = "none";
+      avatar.classList.add("thinking-avatar");
+      avatar.appendChild(logo);
+    }
+
+    const body = document.createElement("div");
+    body.className = "message-body";
+
+    const name = document.createElement("div");
+    name.className = "message-name";
+    name.textContent = message.role === "user" ? "Tu" : "Lumia AI";
+
+    const text = document.createElement("div");
+    text.className = "message-text";
+    text.textContent = message.content;
+
+    body.append(name, text);
+    row.append(avatar, body);
+    messagesBox.appendChild(row);
+  });
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addMessage(role, content, options = {}) {
+  const conversation = currentConversation();
+  if (!conversation) return;
+
+  conversation.messages.push({
+    role,
+    content,
+    ...(options.error ? { error: true } : {})
+  });
+
+  if (role === "user" && conversation.title === "Nuova conversazione") {
+    conversation.title =
+      content.slice(0, 32) + (content.length > 32 ? "…" : "");
+  }
+
+  saveConversations();
+  renderHistory();
+  renderMessages();
+}
+
+function showTyping() {
+  welcome.hidden = true;
+  messagesBox.hidden = false;
+
+  const row = document.createElement("div");
+  row.className = "message";
+  row.id = "typingIndicator";
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar thinking-avatar";
+
+  const logo = document.createElement("img");
+  logo.src = "/logo.png";
+  logo.alt = "Lumia AI";
+  logo.className = "thinking-logo";
+
+  avatar.appendChild(logo);
+
+  const body = document.createElement("div");
+  body.className = "message-body";
+
+  const name = document.createElement("div");
+  name.className = "message-name";
+  name.textContent = "Lumia AI";
+
+  const text = document.createElement("div");
+  text.className = "message-text typing";
+  text.textContent = "Lumia sta pensando…";
+
+  body.append(name, text);
+  row.append(avatar, body);
+  messagesBox.appendChild(row);
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage(rawText) {
+  const content = rawText.trim();
+
+  if (!content || busy) return;
+
+  if (!currentId) {
+    currentId = crypto.randomUUID();
+
+    conversations.unshift({
+      id: currentId,
+      title: "Nuova conversazione",
+      messages: []
+    });
+  }
+
+  const conversation = currentConversation();
+  if (!conversation) return;
+
+  busy = true;
+  sendButton.disabled = true;
+  promptBox.disabled = true;
+  $("newChat").disabled = true;
+  $("disclaimer").textContent = "Lumia sta pensando…";
+
+  addMessage("user", content);
+
+  promptBox.value = "";
+  promptBox.style.height = "auto";
+
+  showTyping();
+
+  let answer = "";
+
+  try {
+    const apiMessages = conversation.messages
+      .filter(message => !message.error)
+      .map(message => ({
+        role: message.role,
+        content: message.content
+      }));
+
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: apiMessages
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "Errore del servizio AI.");
+    }
+
+    if (!response.body) {
+      throw new Error("Il browser non supporta lo streaming.");
+    }
+
+    const indicator = $("typingIndicator");
+    const typingText = indicator?.querySelector(".message-text");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      answer += decoder.decode(value, { stream: true });
+
+      if (typingText && answer) {
+        typingText.classList.remove("typing");
+        typingText.textContent = answer;
+      }
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    answer += decoder.decode();
+
+    if (!answer.trim()) {
+      throw new Error("L'AI non ha restituito una risposta.");
+    }
+
+    addMessage("assistant", answer);
+
+    $("disclaimer").textContent =
+      "Lumia AI · Le conversazioni sono salvate su questo browser.";
+  } catch (error) {
+    console.error("Errore chat:", error);
+
+    const errorMessage = answer.trim()
+      ? answer + "\n\n[La risposta è stata interrotta: " + error.message + "]"
+      : "Non riesco a completare la risposta.\n" + error.message;
+
+    addMessage("assistant", errorMessage, { error: true });
+    $("disclaimer").textContent = "Connessione AI non riuscita.";
+  } finally {
+    $("typingIndicator")?.remove();
+
+    busy = false;
+    sendButton.disabled = false;
+    promptBox.disabled = false;
+    $("newChat").disabled = false;
+
+    promptBox.focus();
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+$("composer").addEventListener("submit", event => {
+  event.preventDefault();
+  sendMessage(promptBox.value);
+});
+
+promptBox.addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    $("composer").requestSubmit();
+  }
+});
+
+promptBox.addEventListener("input", () => {
+  promptBox.style.height = "auto";
+  promptBox.style.height =
+    Math.min(promptBox.scrollHeight, 150) + "px";
+});
+
+$("newChat").addEventListener("click", newConversation);
+
+$("mobileMenu").addEventListener("click", () => {
+  $("sidebar").classList.toggle("open");
+});
+
+document.querySelectorAll("[data-prompt]").forEach(button => {
+  button.addEventListener("click", () => {
+    sendMessage(button.dataset.prompt);
+  });
+});
+
+if (conversations.length) {
+  currentId = conversations[0].id;
+  renderHistory();
+  renderMessages();
+} else {
+  currentId = crypto.randomUUID();
+
+  conversations.unshift({
+    id: currentId,
+    title: "Nuova conversazione",
+    messages: []
+  });
+
+  saveConversations();
+  renderHistory();
+  showWelcome();
+}
+</script>
+</body>
+</html>
