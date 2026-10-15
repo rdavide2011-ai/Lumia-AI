@@ -1,7 +1,7 @@
 const express = require("express");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -11,12 +11,26 @@ app.post("/api/chat", async (req, res) => {
     const messages = req.body.messages;
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: "Nessun messaggio ricevuto." });
+      return res.status(400).json({
+        error: "Nessun messaggio ricevuto."
+      });
     }
 
-    const response = await fetch("http://127.0.0.1:11434/api/chat", {
+    // Ollama funziona solo se è disponibile sul server.
+    // Su Render, 127.0.0.1 non punta al tuo PC.
+    const ollamaUrl = process.env.OLLAMA_URL;
+
+    if (!ollamaUrl) {
+      return res.status(503).json({
+        error: "Il servizio AI non è ancora configurato."
+      });
+    }
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         model: "qwen2.5:3b",
         messages: [
@@ -31,18 +45,27 @@ app.post("/api/chat", async (req, res) => {
     });
 
     if (!response.ok) {
-      return res.status(502).json({ error: "Errore nella risposta di Ollama." });
+      console.error("Errore Ollama:", response.status);
+
+      return res.status(502).json({
+        error: "Errore nella risposta del servizio AI."
+      });
     }
 
     const data = await response.json();
-    res.json({ reply: data.message.content });
+
+    res.json({
+      reply: data.message?.content || "Non ho ricevuto una risposta."
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Impossibile contattare Ollama." });
+    console.error("Errore chat:", error);
+
+    res.status(500).json({
+      error: "Impossibile contattare il servizio AI."
+    });
   }
 });
 
-app.listen(PORT, "127.0.0.1", () => {
-  console.log("LUMIA AI avviata!");
-  console.log("Apri http://127.0.0.1:3000");
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`LUMIA AI avviata sulla porta ${PORT}`);
 });
