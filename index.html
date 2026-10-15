@@ -360,6 +360,19 @@ function toggleSidebar() {
   sidebar.classList.contains("open") ? closeSidebar() : openSidebar();
 }
 
+/* Non salva una chat vuota: la crea solo al primo messaggio inviato. */
+function newConversation() {
+  if (busy) return;
+
+  currentId = null;
+  renderHistory();
+  showWelcome();
+  closeSidebar();
+  promptBox.value = "";
+  promptBox.style.height = "auto";
+  promptBox.focus();
+}
+
 function createConversation() {
   const conversation = {
     id: crypto.randomUUID(),
@@ -372,18 +385,7 @@ function createConversation() {
   conversations.unshift(conversation);
   currentId = conversation.id;
 
-  saveConversations();
-  renderHistory();
-  renderMessages();
-  closeSidebar();
-  promptBox.focus();
-
   return conversation;
-}
-
-function newConversation() {
-  if (busy) return;
-  createConversation();
 }
 
 function deleteConversation(id) {
@@ -392,14 +394,12 @@ function deleteConversation(id) {
   conversations = conversations.filter(c => c.id !== id);
 
   if (currentId === id) {
-    currentId = sortedConversations()[0]?.id || null;
+    currentId = null;
+    showWelcome();
   }
 
   saveConversations();
   renderHistory();
-
-  if (currentId) renderMessages();
-  else showWelcome();
 }
 
 function togglePin(id) {
@@ -485,7 +485,7 @@ function renderHistory() {
   if (!ordered.length) {
     const empty = document.createElement("div");
     empty.className = "history-empty";
-    empty.textContent = "Le tue nuove conversazioni appariranno qui.";
+    empty.textContent = "Le tue conversazioni appariranno qui dopo il primo messaggio.";
     historyBox.appendChild(empty);
     return;
   }
@@ -698,9 +698,7 @@ async function updateAutomaticTitle(conversationId) {
       body: JSON.stringify({ messages })
     });
 
-    if (!response.ok) {
-      throw new Error("Generazione titolo non disponibile.");
-    }
+    if (!response.ok) throw new Error("Generazione titolo non disponibile.");
 
     const data = await response.json();
     const latest = conversations.find(c => c.id === conversationId);
@@ -724,6 +722,10 @@ async function sendMessage(rawText) {
   const content = rawText.trim();
   if (!content || busy) return;
 
+  /*
+   * La conversazione viene creata soltanto quando l'utente
+   * invia effettivamente il primo messaggio.
+   */
   if (!currentId || !currentConversation()) {
     createConversation();
   }
@@ -891,19 +893,8 @@ document.querySelectorAll("[data-prompt]").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
 
-/* AVVIO: OGNI VOLTA APRE UNA NUOVA CHAT VUOTA */
-const initialConversation = {
-  id: crypto.randomUUID(),
-  title: DEFAULT_TITLE,
-  messages: [],
-  pinned: false,
-  manualTitle: false
-};
-
-conversations.unshift(initialConversation);
-currentId = initialConversation.id;
-
-saveConversations();
+/* AVVIO: nessuna nuova chat viene salvata automaticamente */
+currentId = null;
 renderHistory();
 showWelcome();
 </script>
