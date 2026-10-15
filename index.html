@@ -21,6 +21,7 @@
 body {
   margin: 0;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% -20%, #382064, transparent 55%), var(--bg);
   color: var(--text);
@@ -51,7 +52,13 @@ button { cursor: pointer; }
 }
 
 .brand img { width: 43px; height: 43px; object-fit: contain; }
-.brand-name { font-size: 21px; font-weight: 750; letter-spacing: -.8px; }
+
+.brand-name {
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -.8px;
+}
+
 .brand-name span { color: var(--purple); }
 
 .new-chat {
@@ -139,7 +146,12 @@ button { cursor: pointer; }
   box-shadow: 0 0 10px #a477ff;
 }
 
-.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 
 .topbar {
   height: 75px;
@@ -153,6 +165,13 @@ button { cursor: pointer; }
   backdrop-filter: blur(20px);
 }
 
+/* Su desktop il logo resta nella barra laterale, come prima. */
+.mobile-brand,
+.mobile-menu,
+.sidebar-overlay {
+  display: none;
+}
+
 .top-tag {
   padding: 7px 11px;
   border: 1px solid var(--border);
@@ -161,7 +180,12 @@ button { cursor: pointer; }
   font-size: 11px;
 }
 
-.chat { flex: 1; min-height: 0; overflow-y: auto; scroll-behavior: smooth; }
+.chat {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
 
 .welcome {
   min-height: 100%;
@@ -232,10 +256,19 @@ button { cursor: pointer; }
   transform: translateY(-2px);
 }
 
-.suggestion strong { display: block; margin-bottom: 7px; font-size: 12px; }
+.suggestion strong {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+
 .suggestion small { color: var(--muted); font-size: 11px; }
 
-.messages { width: min(800px, 100%); margin: 0 auto; padding: 30px 25px; }
+.messages {
+  width: min(800px, 100%);
+  margin: 0 auto;
+  padding: 30px 25px;
+}
 
 .message {
   display: flex;
@@ -271,15 +304,29 @@ button { cursor: pointer; }
   overflow-wrap: anywhere;
 }
 
-.message-name { margin-bottom: 5px; font-size: 12px; font-weight: 700; color: #c7b1ff; }
+.message-name {
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #c7b1ff;
+}
+
 .message.user .message-name { color: #d7d0e8; }
 .message-text { white-space: pre-wrap; }
 .message.error .message-text { color: #ffaaaa; }
 
-.typing { color: var(--muted); animation: pulse 1.2s infinite; }
+.typing {
+  color: var(--muted);
+  animation: pulse 1.2s infinite;
+}
+
 @keyframes pulse { 50% { opacity: .4; } }
 
-.thinking-avatar { overflow: visible; background: transparent; border: 0; }
+.thinking-avatar {
+  overflow: visible;
+  background: transparent;
+  border: 0;
+}
 
 .thinking-logo {
   display: block;
@@ -354,22 +401,85 @@ textarea::placeholder { color: #777086; }
 
 .send:disabled { opacity: .5; cursor: wait; }
 
-.disclaimer { margin-top: 10px; color: #716b80; font-size: 10px; text-align: center; }
-.mobile-menu { display: none; border: 0; background: transparent; color: white; font-size: 22px; }
+.disclaimer {
+  margin-top: 10px;
+  color: #716b80;
+  font-size: 10px;
+  text-align: center;
+}
 
 @media (max-width: 700px) {
   .sidebar {
     position: fixed;
-    z-index: 10;
+    z-index: 30;
     inset: 0 auto 0 0;
-    width: 270px;
-    transform: translateX(-100%);
-    transition: transform .25s;
+    width: min(290px, 85vw);
+    height: 100%;
+    height: 100dvh;
+    transform: translateX(-105%);
+    transition: transform .25s ease;
+    box-shadow: 15px 0 45px rgba(0,0,0,.35);
   }
 
   .sidebar.open { transform: translateX(0); }
-  .mobile-menu { display: block; }
-  .topbar { height: 65px; padding: 0 16px; }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    border: 0;
+    background: rgba(0,0,0,.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s, visibility .25s;
+  }
+
+  .sidebar-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Barra mobile: hamburger a sinistra, logo e nome accanto. */
+  .topbar {
+    height: 65px;
+    min-height: 65px;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 0 14px;
+  }
+
+  .mobile-menu {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: rgba(255,255,255,.04);
+    color: white;
+    font-size: 23px;
+    line-height: 1;
+  }
+
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    font-size: 17px;
+    font-weight: 750;
+    letter-spacing: -.5px;
+  }
+
+  .mobile-brand img {
+    display: block;
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+  }
+
   .top-tag { display: none; }
   .welcome { padding: 25px 18px; }
   .hero-logo { width: 88px; height: 88px; }
@@ -377,13 +487,16 @@ textarea::placeholder { color: #777086; }
   .suggestions { grid-template-columns: 1fr; margin-top: 23px; }
   .suggestion { min-height: 68px; }
   .messages { padding: 22px 16px; }
-  .composer-area { padding: 10px 12px 14px; }
+  .composer-area { padding: 10px 12px max(14px, env(safe-area-inset-bottom)); }
+  .composer-hint { font-size: 9px; }
 }
 </style>
 </head>
 
 <body>
 <div class="app">
+  <button class="sidebar-overlay" id="sidebarOverlay" aria-label="Chiudi cronologia"></button>
+
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <img src="/logo.png" alt="Lumia AI">
@@ -402,6 +515,13 @@ textarea::placeholder { color: #777086; }
 
   <main class="main">
     <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Apri cronologia chat" aria-expanded="false">☰</button>
+
+      <div class="mobile-brand">
+        <img src="/logo.png" alt="Logo Lumia AI">
+        <span>Lumia AI</span>
+      </div>
+
       <div class="top-tag">✦ &nbsp; AI ONLINE</div>
     </header>
 
@@ -466,6 +586,9 @@ const messagesBox = $("messages");
 const promptBox = $("prompt");
 const historyBox = $("history");
 const sendButton = $("send");
+const sidebar = $("sidebar");
+const mobileMenu = $("mobileMenu");
+const sidebarOverlay = $("sidebarOverlay");
 
 let conversations = loadConversations();
 let currentId = null;
@@ -492,6 +615,26 @@ function currentConversation() {
   return conversations.find(conversation => conversation.id === currentId);
 }
 
+function openSidebar() {
+  sidebar.classList.add("open");
+  sidebarOverlay.classList.add("visible");
+  mobileMenu.setAttribute("aria-expanded", "true");
+}
+
+function closeSidebar() {
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("visible");
+  mobileMenu.setAttribute("aria-expanded", "false");
+}
+
+function toggleSidebar() {
+  if (sidebar.classList.contains("open")) {
+    closeSidebar();
+  } else {
+    openSidebar();
+  }
+}
+
 function newConversation() {
   if (busy) return;
 
@@ -507,7 +650,7 @@ function newConversation() {
   renderHistory();
   renderMessages();
   promptBox.focus();
-  $("sidebar").classList.remove("open");
+  closeSidebar();
 }
 
 function deleteConversation(id) {
@@ -552,7 +695,7 @@ function renderHistory() {
       currentId = conversation.id;
       renderHistory();
       renderMessages();
-      $("sidebar").classList.remove("open");
+      closeSidebar();
     });
 
     const remove = document.createElement("button");
@@ -680,7 +823,6 @@ function showTyping() {
 
 async function sendMessage(rawText) {
   const content = rawText.trim();
-
   if (!content || busy) return;
 
   if (!currentId) {
@@ -800,13 +942,15 @@ promptBox.addEventListener("input", () => {
 });
 
 $("newChat").addEventListener("click", newConversation);
-
-$("mobileMenu").addEventListener("click", () => {
-  $("sidebar").classList.toggle("open");
-});
+mobileMenu.addEventListener("click", toggleSidebar);
+sidebarOverlay.addEventListener("click", closeSidebar);
 
 document.querySelectorAll("[data-prompt]").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeSidebar();
 });
 
 if (conversations.length) {
