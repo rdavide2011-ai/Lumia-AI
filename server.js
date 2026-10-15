@@ -110,13 +110,37 @@ app.post("/api/chat", async (req, res) => {
       .slice(-30)
       .map(m => ({ role: m.role, content: m.content.slice(0, 12000) }));
 
+    const preferences = req.body?.preferences && typeof req.body.preferences === "object" ? req.body.preferences : {};
+    const toneMap = {
+      friendly: "Usa un tono amichevole, naturale e rispettoso.",
+      professional: "Usa un tono professionale, preciso e ordinato.",
+      direct: "Vai dritto al punto e privilegia risposte sintetiche.",
+      creative: "Usa un tono creativo ed espressivo, restando chiaro e utile."
+    };
+    const lengthMap = {
+      short: "Mantieni le risposte brevi e concentrate sui punti essenziali.",
+      balanced: "Regola la lunghezza in base alla domanda, con un buon equilibrio tra chiarezza e dettaglio.",
+      detailed: "Fornisci risposte dettagliate, con spiegazioni ed esempi quando utili."
+    };
+    const tone = toneMap[preferences.responseTone] || toneMap.friendly;
+    const length = lengthMap[preferences.responseLength] || lengthMap.balanced;
+    const customInstructions = typeof preferences.customInstructions === "string"
+      ? preferences.customInstructions.trim().slice(0, 1200)
+      : "";
+    const personalMemory = typeof preferences.personalMemory === "string"
+      ? preferences.personalMemory.trim().slice(0, 2000)
+      : "";
+    const systemContent = [
+      "Sei Lumia AI, un assistente intelligente. Rispondi in italiano in modo chiaro, utile e rispettoso.",
+      tone,
+      length,
+      customInstructions ? "Istruzioni personalizzate dell'utente (seguile se compatibili con sicurezza e accuratezza): " + customInstructions : "",
+      personalMemory ? "Memoria personale fornita dall'utente, da usare come contesto quando pertinente: " + personalMemory : ""
+    ].filter(Boolean).join("\n\n");
     const response = await callCloudflare([
-      {
-        role: "system",
-        content: "Sei Lumia AI, un assistente intelligente e amichevole. Rispondi in italiano in modo chiaro, naturale e utile."
-      },
+      { role: "system", content: systemContent },
       ...validMessages
-    ], { max_tokens: 1024, temperature: 0.7, stream: true, timeout: 90000 });
+    ], { max_tokens: 1024, temperature: preferences.responseTone === "creative" ? 0.85 : 0.7, stream: true, timeout: 90000 });
 
     if (!response.body) {
       return res.status(502).json({ error: "Il servizio AI non ha restituito una risposta." });
