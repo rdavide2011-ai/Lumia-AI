@@ -57,6 +57,15 @@ button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity
 .messages{width:min(800px,100%);margin:0 auto;padding:30px 25px}
 .message{display:flex;gap:13px;margin-bottom:25px}
 .avatar{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border:1px solid var(--border);border-radius:11px;background:#211633;font-size:12px}
+/* Il logo scelto dall’utente si muove solo mentre Lumia sta elaborando la risposta. */
+.thinking-avatar{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border:1px solid var(--border);border-radius:14px;background:color-mix(in srgb,var(--purple) 13%,transparent);overflow:visible}
+.thinking-logo{display:block;width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 0 9px color-mix(in srgb,var(--purple) 65%,transparent));animation:lumiaThinkingBounce 850ms ease-in-out infinite;transform-origin:center}
+@keyframes lumiaThinkingBounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.04)}}
+#typing .message-text{display:flex;align-items:center;gap:8px;color:var(--muted)}
+#typing .thinking-dots{display:inline-flex;gap:3px;align-items:center}
+#typing .thinking-dots span{width:4px;height:4px;border-radius:50%;background:var(--purple);animation:lumiaThinkingDot 900ms ease-in-out infinite}
+#typing .thinking-dots span:nth-child(2){animation-delay:150ms}#typing .thinking-dots span:nth-child(3){animation-delay:300ms}
+@keyframes lumiaThinkingDot{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 .message-body{min-width:0;padding-top:3px;line-height:1.75;font-size:14px;overflow-wrap:anywhere}
 .message-name{margin-bottom:5px;font-size:12px;font-weight:700;color:#c7b1ff}
 .message-text{white-space:pre-wrap}.error .message-text{color:#ffaaaa}
@@ -553,7 +562,8 @@ async function sendMessage(raw){
   const c=current();busy=true;$("send").disabled=true;$("prompt").disabled=true;$("newChat").disabled=true;
   addMessage("user",content);$("prompt").value="";$("prompt").style.height="auto";
   const typing=document.createElement("div");typing.className="message";typing.id="typing";
-  typing.innerHTML='<div class="avatar">✦</div><div class="message-body"><div class="message-name">Lumia AI</div><div class="message-text">Lumia sta pensando…</div></div>';$("messages").append(typing);
+  const thinkingLogo=({purple:"/logo.png",blue:"/logo-bluelettronico.png",pink:"/logo-rosaneon.png",mint:"/logo-verdementa.png",orange:"/logo-arancione.png"})[settings.accentColor]||"/logo.png";
+  typing.innerHTML='<div class="thinking-avatar"><img class="thinking-logo" alt="Lumia sta pensando" src="'+thinkingLogo+'"></div><div class="message-body"><div class="message-name">Lumia AI</div><div class="message-text">Lumia sta pensando <span class="thinking-dots" aria-hidden="true"><span></span><span></span><span></span></span></div></div>';$("messages").append(typing);
   try{
     const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})),preferences:{responseTone:settings.responseTone,responseLength:settings.responseLength,customInstructions:settings.customInstructions,personalMemory:settings.personalMemory}})});
     if(!r.ok){let t=await r.text();try{t=JSON.parse(t).error||t}catch{}throw Error(t||"Servizio AI non disponibile")}
