@@ -1,10 +1,10 @@
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#090711">
+<link rel="icon" type="image/png" href="/logo.png">
 <title>Lumia AI</title>
 
 <style>
@@ -458,8 +458,6 @@ async function sendMessage(rawText) {
   showTyping();
 
   try {
-    // Inviamo soltanto i messaggi della conversazione corrente.
-    // Le eventuali notifiche di errore non vengono inviate al modello.
     const apiMessages = conversation.messages
       .filter(message => !message.error)
       .map(message => ({
@@ -493,7 +491,7 @@ async function sendMessage(rawText) {
       "assistant",
       "Non riesco a contattare il modello AI.\n\n" +
       error.message +
-      "\n\nControlla che il server di Lumia e Ollama siano entrambi in esecuzione.",
+      "\n\nControlla che il server di Lumia e il servizio AI siano in esecuzione.",
       { error: true }
     );
 
@@ -537,7 +535,6 @@ document.querySelectorAll("[data-prompt]").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
 
-// Ripristina le conversazioni dopo il riavvio del browser.
 if (conversations.length) {
   currentId = conversations[0].id;
   renderHistory();
@@ -548,4 +545,3 @@ if (conversations.length) {
 </script>
 </body>
 </html>
-```
