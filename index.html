@@ -16,142 +16,420 @@
   --text:#f5f1ff;
   --muted:#9690aa;
 }
+
 * { box-sizing:border-box; }
+
 body {
-  margin:0;height:100vh;overflow:hidden;
+  margin:0;
+  height:100vh;
+  overflow:hidden;
   background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg);
   color:var(--text);
   font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
+
 button,textarea { font:inherit; }
 button { cursor:pointer; }
+
 .app { display:flex;width:100%;height:100%; }
+
 .sidebar {
-  width:270px;flex-shrink:0;display:flex;flex-direction:column;
-  padding:22px 16px;background:rgba(12,10,21,.9);
+  width:270px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  padding:22px 16px;
+  background:rgba(12,10,21,.9);
   border-right:1px solid var(--border);
 }
-.brand { display:flex;align-items:center;gap:12px;margin-bottom:30px;padding:0 7px; }
+
+.brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:30px;
+  padding:0 7px;
+}
+
 .brand img { width:43px;height:43px;object-fit:contain; }
 .brand-name { font-size:21px;font-weight:750;letter-spacing:-.8px; }
 .brand-name span { color:var(--purple); }
+
 .new-chat {
-  width:100%;padding:13px;border:1px solid #50386f;border-radius:13px;
-  background:linear-gradient(120deg,#39245c,#211637);color:white;text-align:left;
+  width:100%;
+  padding:13px;
+  border:1px solid #50386f;
+  border-radius:13px;
+  background:linear-gradient(120deg,#39245c,#211637);
+  color:white;
+  text-align:left;
 }
+
 .new-chat:hover { border-color:var(--purple); }
+
 .section-label {
-  margin:27px 9px 12px;color:var(--muted);font-size:11px;
-  font-weight:700;letter-spacing:1.5px;
+  margin:27px 9px 12px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1.5px;
 }
+
 .history { flex:1;overflow-y:auto; }
+
 .history-item {
-  display:flex;align-items:center;gap:6px;width:100%;padding:11px;
-  margin-bottom:5px;border:1px solid transparent;border-radius:10px;
-  background:transparent;color:#c9c2d9;text-align:left;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  padding:11px;
+  margin-bottom:5px;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  color:#c9c2d9;
+  text-align:left;
 }
-.history-item.active,.history-item:hover {
-  background:rgba(255,255,255,.055);border-color:var(--border);color:white;
+
+.history-item.active,
+.history-item:hover {
+  background:rgba(255,255,255,.055);
+  border-color:var(--border);
+  color:white;
 }
-.history-title { flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+
+.history-title {
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
 .history-delete {
-  border:0;background:transparent;color:var(--muted);padding:3px 5px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:3px 5px;
 }
+
 .history-delete:hover { color:#ff8585; }
+
 .sidebar-footer {
-  padding:15px 8px 0;border-top:1px solid var(--border);
-  color:var(--muted);font-size:12px;
+  padding:15px 8px 0;
+  border-top:1px solid var(--border);
+  color:var(--muted);
+  font-size:12px;
 }
+
 .dot {
-  display:inline-block;width:7px;height:7px;margin-right:7px;
-  border-radius:50%;background:#a477ff;box-shadow:0 0 10px #a477ff;
+  display:inline-block;
+  width:7px;
+  height:7px;
+  margin-right:7px;
+  border-radius:50%;
+  background:#a477ff;
+  box-shadow:0 0 10px #a477ff;
 }
-.main { flex:1;min-width:0;display:flex;flex-direction:column; }
+
+.main {
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+
 .topbar {
-  height:75px;flex-shrink:0;display:flex;align-items:center;
-  justify-content:space-between;padding:0 30px;border-bottom:1px solid var(--border);
-  background:rgba(9,7,17,.35);backdrop-filter:blur(20px);
+  height:75px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 30px;
+  border-bottom:1px solid var(--border);
+  background:rgba(9,7,17,.35);
+  backdrop-filter:blur(20px);
 }
-.model-label { display:flex;align-items:center;gap:10px;font-size:13px; }
+
+.model-label {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:13px;
+}
+
 .model-icon {
-  display:grid;place-items:center;width:34px;height:34px;
-  border:1px solid #503b76;border-radius:11px;background:#211633;color:#c7aaff;
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border:1px solid #503b76;
+  border-radius:11px;
+  background:#211633;
+  color:#c7aaff;
 }
+
 .top-tag {
-  padding:7px 11px;border:1px solid var(--border);
-  border-radius:20px;color:#b7a6d8;font-size:11px;
+  padding:7px 11px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  color:#b7a6d8;
+  font-size:11px;
 }
-.chat { flex:1;min-height:0;overflow-y:auto;scroll-behavior:smooth; }
+
+.chat {
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  scroll-behavior:smooth;
+}
+
 .welcome {
-  min-height:100%;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:30px 20px 45px;text-align:center;
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:30px 20px 45px;
+  text-align:center;
 }
+
 .hero-logo {
-  width:115px;height:115px;object-fit:contain;
-  filter:drop-shadow(0 0 28px #7d46ff55);animation:float 5s ease-in-out infinite;
+  width:115px;
+  height:115px;
+  object-fit:contain;
+  filter:drop-shadow(0 0 28px #7d46ff55);
+  animation:float 5s ease-in-out infinite;
 }
-@keyframes float { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
-.welcome h1 { margin:20px 0 10px;font-size:clamp(32px,5vw,49px);letter-spacing:-2px; }
+
+@keyframes float {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-8px); }
+}
+
+.welcome h1 {
+  margin:20px 0 10px;
+  font-size:clamp(32px,5vw,49px);
+  letter-spacing:-2px;
+}
+
 .gradient {
   background:linear-gradient(100deg,#d6c0ff,#9c70ff,#64d9ff);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
 }
-.welcome p { max-width:440px;margin:0;color:var(--muted);line-height:1.7;font-size:14px; }
+
+.welcome p {
+  max-width:440px;
+  margin:0;
+  color:var(--muted);
+  line-height:1.7;
+  font-size:14px;
+}
+
 .suggestions {
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;width:min(560px,100%);margin-top:30px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  width:min(560px,100%);
+  margin-top:30px;
 }
+
 .suggestion {
-  min-height:83px;padding:15px;border:1px solid var(--border);border-radius:14px;
-  background:rgba(255,255,255,.025);color:white;text-align:left;transition:.2s;
+  min-height:83px;
+  padding:15px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:rgba(255,255,255,.025);
+  color:white;
+  text-align:left;
+  transition:.2s;
 }
-.suggestion:hover { background:#a477ff18;border-color:#7250a9;transform:translateY(-2px); }
-.suggestion strong { display:block;margin-bottom:7px;font-size:12px; }
+
+.suggestion:hover {
+  background:#a477ff18;
+  border-color:#7250a9;
+  transform:translateY(-2px);
+}
+
+.suggestion strong {
+  display:block;
+  margin-bottom:7px;
+  font-size:12px;
+}
+
 .suggestion small { color:var(--muted);font-size:11px; }
-.messages { width:min(800px,100%);margin:0 auto;padding:30px 25px; }
-.message { display:flex;gap:13px;margin-bottom:25px;animation:appear .25s ease; }
-@keyframes appear { from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)} }
-.avatar {
-  width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;
-  border:1px solid var(--border);border-radius:11px;background:#211633;font-size:12px;
+
+.messages {
+  width:min(800px,100%);
+  margin:0 auto;
+  padding:30px 25px;
 }
+
+.message {
+  display:flex;
+  gap:13px;
+  margin-bottom:25px;
+  animation:appear .25s ease;
+}
+
+@keyframes appear {
+  from { opacity:0;transform:translateY(7px); }
+  to { opacity:1;transform:translateY(0); }
+}
+
+.avatar {
+  width:34px;
+  height:34px;
+  flex-shrink:0;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:#211633;
+  font-size:12px;
+}
+
 .message.user .avatar { background:#29223a; }
-.message-body { min-width:0;padding-top:3px;line-height:1.75;font-size:14px;overflow-wrap:anywhere; }
-.message-name { margin-bottom:5px;font-size:12px;font-weight:700;color:#c7b1ff; }
+
+.message-body {
+  min-width:0;
+  padding-top:3px;
+  line-height:1.75;
+  font-size:14px;
+  overflow-wrap:anywhere;
+}
+
+.message-name {
+  margin-bottom:5px;
+  font-size:12px;
+  font-weight:700;
+  color:#c7b1ff;
+}
+
 .message.user .message-name { color:#d7d0e8; }
+
 .message-text { white-space:pre-wrap; }
 .message.error .message-text { color:#ffaaaa; }
-.typing { color:var(--muted);animation:pulse 1.2s infinite; }
-@keyframes pulse { 50%{opacity:.4} }
-.composer-area {
-  flex-shrink:0;padding:12px 24px 20px;background:linear-gradient(transparent,var(--bg) 25%);
+
+.typing {
+  color:var(--muted);
+  animation:pulse 1.2s infinite;
 }
+
+@keyframes pulse {
+  50% { opacity:.4; }
+}
+
+/* Logo Lumia durante l'elaborazione */
+.thinking-avatar {
+  overflow:visible;
+  background:transparent;
+  border:0;
+}
+
+.thinking-logo {
+  display:block;
+  width:34px;
+  height:34px;
+  object-fit:contain;
+  filter:drop-shadow(0 0 9px #a477ff88);
+  animation:lumia-thinking 1.2s ease-in-out infinite;
+}
+
+@keyframes lumia-thinking {
+  0%,100% {
+    transform:translateY(0);
+  }
+  50% {
+    transform:translateY(-7px);
+  }
+}
+
+.composer-area {
+  flex-shrink:0;
+  padding:12px 24px 20px;
+  background:linear-gradient(transparent,var(--bg) 25%);
+}
+
 .composer {
-  width:min(800px,100%);margin:0 auto;padding:12px 12px 10px 17px;
-  border:1px solid #a477ff45;border-radius:19px;background:rgba(22,18,34,.95);
+  width:min(800px,100%);
+  margin:0 auto;
+  padding:12px 12px 10px 17px;
+  border:1px solid #a477ff45;
+  border-radius:19px;
+  background:rgba(22,18,34,.95);
   transition:border-color .2s;
 }
+
 .composer:focus-within { border-color:#a477ffb0; }
+
 textarea {
-  display:block;width:100%;max-height:150px;min-height:35px;resize:none;
-  border:0;outline:none;background:transparent;color:white;line-height:1.6;font-size:14px;
+  display:block;
+  width:100%;
+  max-height:150px;
+  min-height:35px;
+  resize:none;
+  border:0;
+  outline:none;
+  background:transparent;
+  color:white;
+  line-height:1.6;
+  font-size:14px;
 }
+
 textarea::placeholder { color:#777086; }
-.composer-bottom { display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:10px; }
-.composer-hint { color:#777086;font-size:10px; }
-.send {
-  display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;
-  border:0;border-radius:12px;background:linear-gradient(135deg,#b18aff,#8051e8);
-  color:white;font-size:19px;
+
+.composer-bottom {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:8px;
+  gap:10px;
 }
+
+.composer-hint { color:#777086;font-size:10px; }
+
+.send {
+  display:grid;
+  place-items:center;
+  width:37px;
+  height:37px;
+  flex-shrink:0;
+  border:0;
+  border-radius:12px;
+  background:linear-gradient(135deg,#b18aff,#8051e8);
+  color:white;
+  font-size:19px;
+}
+
 .send:disabled { opacity:.5;cursor:wait; }
-.disclaimer { margin-top:10px;color:#716b80;font-size:10px;text-align:center; }
-.mobile-menu { display:none;border:0;background:transparent;color:white;font-size:22px; }
+
+.disclaimer {
+  margin-top:10px;
+  color:#716b80;
+  font-size:10px;
+  text-align:center;
+}
+
+.mobile-menu {
+  display:none;
+  border:0;
+  background:transparent;
+  color:white;
+  font-size:22px;
+}
+
 @media(max-width:700px) {
   .sidebar {
-    position:fixed;z-index:10;inset:0 auto 0 0;width:270px;
-    transform:translateX(-100%);transition:transform .25s;
+    position:fixed;
+    z-index:10;
+    inset:0 auto 0 0;
+    width:270px;
+    transform:translateX(-100%);
+    transition:transform .25s;
   }
+
   .sidebar.open { transform:translateX(0); }
   .mobile-menu { display:block; }
   .topbar { height:65px;padding:0 16px; }
@@ -171,377 +449,8 @@ textarea::placeholder { color:#777086; }
 <div class="app">
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <img src="logo.png" alt="Lumia AI">
+      <img src="/logo.png" alt="Lumia AI">
       <div class="brand-name">Lumia <span>AI</span></div>
     </div>
 
     <button class="new-chat" id="newChat">＋ &nbsp; Nuova conversazione</button>
-    <div class="section-label">LE TUE CONVERSAZIONI</div>
-    <div class="history" id="history"></div>
-
-    <div class="sidebar-footer">
-      <span class="dot"></span>Qwen 2.5 · AI locale
-    </div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:13px">
-        <button class="mobile-menu" id="mobileMenu" aria-label="Apri menu">☰</button>
-        <div class="model-label">
-          <div class="model-icon">✦</div>
-          <div>
-            <strong>Lumia AI</strong>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">Powered by Qwen 2.5</div>
-          </div>
-        </div>
-      </div>
-      <div class="top-tag">✦ &nbsp; LOCAL AI</div>
-    </header>
-
-    <section class="chat" id="chat">
-      <div class="welcome" id="welcome">
-        <img class="hero-logo" src="logo.png" alt="Logo Lumia AI">
-        <h1>Benvenuto in <span class="gradient">Lumia.</span></h1>
-        <p>Uno spazio per le tue idee, le tue domande e i tuoi progetti. Da dove vuoi iniziare?</p>
-        <div class="suggestions">
-          <button class="suggestion" data-prompt="Insegnami qualcosa di sorprendente sulla tecnologia.">
-            <strong>✧ Scopri qualcosa</strong><small>Esplora nuove idee e tecnologie</small>
-          </button>
-          <button class="suggestion" data-prompt="Aiutami a progettare un'app originale.">
-            <strong>⌘ Crea un progetto</strong><small>Trasforma un'idea in qualcosa di concreto</small>
-          </button>
-          <button class="suggestion" data-prompt="Fammi un indovinello di logica difficile.">
-            <strong>◇ Metti alla prova la mente</strong><small>Logica, enigmi e ragionamento</small>
-          </button>
-          <button class="suggestion" data-prompt="Spiegami un argomento difficile in modo semplice, con esempi.">
-            <strong>↗ Impara meglio</strong><small>Capisci anche gli argomenti complessi</small>
-          </button>
-        </div>
-      </div>
-      <div class="messages" id="messages" hidden></div>
-    </section>
-
-    <footer class="composer-area">
-      <form class="composer" id="composer">
-        <textarea id="prompt" rows="1" placeholder="Scrivi un messaggio a Lumia..." aria-label="Messaggio"></textarea>
-        <div class="composer-bottom">
-          <span class="composer-hint">INVIO per inviare · SHIFT + INVIO per andare a capo</span>
-          <button class="send" id="send" type="submit" aria-label="Invia messaggio">↑</button>
-        </div>
-      </form>
-      <div class="disclaimer" id="disclaimer">
-        AI locale · Le conversazioni sono salvate su questo browser.
-      </div>
-    </footer>
-  </main>
-</div>
-
-<script>
-"use strict";
-
-const $ = id => document.getElementById(id);
-const STORAGE_KEY = "lumia_ai_conversations_v1";
-
-const chat = $("chat");
-const welcome = $("welcome");
-const messagesBox = $("messages");
-const promptBox = $("prompt");
-const historyBox = $("history");
-const sendButton = $("send");
-
-let conversations = loadConversations();
-let currentId = null;
-let busy = false;
-
-function loadConversations() {
-  try {
-    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(value) ? value : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveConversations() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-  } catch (error) {
-    console.error("Impossibile salvare la cronologia:", error);
-    $("disclaimer").textContent =
-      "Spazio di archiviazione non disponibile: la cronologia potrebbe non essere salvata.";
-  }
-}
-
-function currentConversation() {
-  return conversations.find(c => c.id === currentId);
-}
-
-function newConversation() {
-  currentId = crypto.randomUUID();
-  conversations.unshift({
-    id: currentId,
-    title: "Nuova conversazione",
-    messages: []
-  });
-
-  saveConversations();
-  renderHistory();
-  renderMessages();
-  promptBox.focus();
-  $("sidebar").classList.remove("open");
-}
-
-function deleteConversation(id) {
-  conversations = conversations.filter(c => c.id !== id);
-
-  if (currentId === id) {
-    currentId = conversations[0]?.id || null;
-  }
-
-  saveConversations();
-  renderHistory();
-
-  if (!currentId) {
-    showWelcome();
-  } else {
-    renderMessages();
-  }
-}
-
-function renderHistory() {
-  historyBox.replaceChildren();
-
-  conversations.forEach(conversation => {
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.alignItems = "center";
-
-    const select = document.createElement("button");
-    select.className = "history-item" +
-      (conversation.id === currentId ? " active" : "");
-    select.style.flex = "1";
-    select.style.minWidth = "0";
-
-    const title = document.createElement("span");
-    title.className = "history-title";
-    title.textContent = "▱  " + conversation.title;
-    select.appendChild(title);
-
-    select.addEventListener("click", () => {
-      currentId = conversation.id;
-      renderHistory();
-      renderMessages();
-      $("sidebar").classList.remove("open");
-    });
-
-    const remove = document.createElement("button");
-    remove.className = "history-delete";
-    remove.textContent = "×";
-    remove.title = "Elimina conversazione";
-    remove.setAttribute("aria-label", "Elimina " + conversation.title);
-    remove.addEventListener("click", () => deleteConversation(conversation.id));
-
-    row.append(select, remove);
-    historyBox.appendChild(row);
-  });
-}
-
-function showWelcome() {
-  welcome.hidden = false;
-  messagesBox.hidden = true;
-  messagesBox.replaceChildren();
-}
-
-function renderMessages() {
-  const conversation = currentConversation();
-
-  if (!conversation || conversation.messages.length === 0) {
-    showWelcome();
-    return;
-  }
-
-  welcome.hidden = true;
-  messagesBox.hidden = false;
-  messagesBox.replaceChildren();
-
-  conversation.messages.forEach(message => {
-    const row = document.createElement("div");
-    row.className = "message " + message.role +
-      (message.error ? " error" : "");
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.textContent = message.role === "user" ? "Tu" : "✦";
-
-    const body = document.createElement("div");
-    body.className = "message-body";
-
-    const name = document.createElement("div");
-    name.className = "message-name";
-    name.textContent = message.role === "user" ? "Tu" : "Lumia AI";
-
-    const text = document.createElement("div");
-    text.className = "message-text";
-    text.textContent = message.content;
-
-    body.append(name, text);
-    row.append(avatar, body);
-    messagesBox.appendChild(row);
-  });
-
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function addMessage(role, content, options = {}) {
-  const conversation = currentConversation();
-  if (!conversation) return;
-
-  conversation.messages.push({
-    role,
-    content,
-    ...(options.error ? { error: true } : {})
-  });
-
-  if (role === "user" && conversation.title === "Nuova conversazione") {
-    conversation.title = content.slice(0, 32) +
-      (content.length > 32 ? "…" : "");
-  }
-
-  saveConversations();
-  renderHistory();
-  renderMessages();
-}
-
-function showTyping() {
-  welcome.hidden = true;
-  messagesBox.hidden = false;
-
-  const row = document.createElement("div");
-  row.className = "message";
-  row.id = "typingIndicator";
-
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  avatar.textContent = "✦";
-
-  const text = document.createElement("div");
-  text.className = "message-body typing";
-  text.textContent = "Lumia sta pensando…";
-
-  row.append(avatar, text);
-  messagesBox.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-async function sendMessage(rawText) {
-  const content = rawText.trim();
-
-  if (!content || busy) return;
-
-  if (!currentId) {
-    newConversation();
-  }
-
-  const conversation = currentConversation();
-  if (!conversation) return;
-
-  busy = true;
-  sendButton.disabled = true;
-  promptBox.disabled = true;
-  $("disclaimer").textContent = "Lumia sta elaborando la tua richiesta…";
-
-  addMessage("user", content);
-  promptBox.value = "";
-  promptBox.style.height = "auto";
-
-  showTyping();
-
-  try {
-    const apiMessages = conversation.messages
-      .filter(message => !message.error)
-      .map(message => ({
-        role: message.role,
-        content: message.content
-      }));
-
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: apiMessages })
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(data.error || "Il server ha restituito un errore.");
-    }
-
-    if (typeof data.reply !== "string" || !data.reply.trim()) {
-      throw new Error("L'AI non ha restituito una risposta.");
-    }
-
-    addMessage("assistant", data.reply);
-    $("disclaimer").textContent =
-      "AI locale · Le conversazioni sono salvate su questo browser.";
-  } catch (error) {
-    console.error("Errore chat:", error);
-
-    addMessage(
-      "assistant",
-      "Non riesco a contattare il modello AI.\n\n" +
-      error.message +
-      "\n\nControlla che il server di Lumia e il servizio AI siano in esecuzione.",
-      { error: true }
-    );
-
-    $("disclaimer").textContent = "Connessione AI non riuscita.";
-  } finally {
-    const indicator = $("typingIndicator");
-    if (indicator) indicator.remove();
-
-    busy = false;
-    sendButton.disabled = false;
-    promptBox.disabled = false;
-    promptBox.focus();
-    chat.scrollTop = chat.scrollHeight;
-  }
-}
-
-$("composer").addEventListener("submit", event => {
-  event.preventDefault();
-  sendMessage(promptBox.value);
-});
-
-promptBox.addEventListener("keydown", event => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    $("composer").requestSubmit();
-  }
-});
-
-promptBox.addEventListener("input", () => {
-  promptBox.style.height = "auto";
-  promptBox.style.height = Math.min(promptBox.scrollHeight, 150) + "px";
-});
-
-$("newChat").addEventListener("click", newConversation);
-
-$("mobileMenu").addEventListener("click", () => {
-  $("sidebar").classList.toggle("open");
-});
-
-document.querySelectorAll("[data-prompt]").forEach(button => {
-  button.addEventListener("click", () => sendMessage(button.dataset.prompt));
-});
-
-if (conversations.length) {
-  currentId = conversations[0].id;
-  renderHistory();
-  renderMessages();
-} else {
-  newConversation();
-}
-</script>
-</body>
-</html>
