@@ -88,7 +88,7 @@ button:disabled{cursor:wait;opacity:.55}
 .sidebar-footer{padding:15px 8px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
 .dot{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#a477ff;box-shadow:0 0 10px #a477ff}
 
-/* MAIN */
+/* AREA PRINCIPALE */
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{
   height:75px;flex-shrink:0;display:flex;align-items:center;
@@ -153,7 +153,7 @@ textarea::placeholder{color:#777086}
 }
 .disclaimer{margin-top:10px;color:#716b80;font-size:10px;text-align:center}
 
-/* RINOMINA */
+/* MODALE RINOMINA */
 .modal-backdrop{
   position:fixed;inset:0;z-index:100;display:flex;align-items:center;
   justify-content:center;padding:20px;background:rgba(0,0,0,.65);backdrop-filter:blur(7px)
@@ -676,11 +676,6 @@ function showTyping() {
   chat.scrollTop = chat.scrollHeight;
 }
 
-/*
- * Aggiorna il titolo usando tutta la conversazione.
- * Il server deve esporre POST /api/title e restituire:
- * { "title": "Titolo della conversazione" }
- */
 async function updateAutomaticTitle(conversationId) {
   const conversation = conversations.find(c => c.id === conversationId);
 
@@ -721,7 +716,6 @@ async function updateAutomaticTitle(conversationId) {
       renderHistory();
     }
   } catch (error) {
-    // Se la generazione del titolo fallisce, la chat continua a funzionare.
     console.warn("Titolo automatico non aggiornato:", error);
   }
 }
@@ -783,10 +777,7 @@ async function sendMessage(rawText) {
     const decoder = new TextDecoder();
     let answer = "";
 
-    const typingIndicator = $("typingIndicator");
-    if (typingIndicator) {
-      typingIndicator.remove();
-    }
+    $("typingIndicator")?.remove();
 
     const row = document.createElement("div");
     row.className = "message assistant";
@@ -840,16 +831,14 @@ async function sendMessage(rawText) {
     $("disclaimer").textContent =
       "Lumia AI · Le conversazioni sono salvate su questo browser.";
 
-    // Aggiorna il titolo dopo ogni risposta, così riflette anche i nuovi dettagli.
     await updateAutomaticTitle(conversationId);
 
   } catch (error) {
     console.error("Errore chat:", error);
-
     $("typingIndicator")?.remove();
 
-    // Se è già comparsa una risposta parziale, non duplicarla.
     const partialMessage = messagesBox.querySelector(".message.assistant:last-child");
+
     if (partialMessage && partialMessage.querySelector(".message-text")?.textContent) {
       partialMessage.classList.add("error");
       partialMessage.querySelector(".message-text").textContent +=
@@ -902,27 +891,21 @@ document.querySelectorAll("[data-prompt]").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
 
-/* Avvio */
-if (conversations.length) {
-  currentId = sortedConversations()[0].id;
-  renderHistory();
-  renderMessages();
-} else {
-  const conversation = {
-    id: crypto.randomUUID(),
-    title: DEFAULT_TITLE,
-    messages: [],
-    pinned: false,
-    manualTitle: false
-  };
+/* AVVIO: OGNI VOLTA APRE UNA NUOVA CHAT VUOTA */
+const initialConversation = {
+  id: crypto.randomUUID(),
+  title: DEFAULT_TITLE,
+  messages: [],
+  pinned: false,
+  manualTitle: false
+};
 
-  conversations.unshift(conversation);
-  currentId = conversation.id;
+conversations.unshift(initialConversation);
+currentId = initialConversation.id;
 
-  saveConversations();
-  renderHistory();
-  showWelcome();
-}
+saveConversations();
+renderHistory();
+showWelcome();
 </script>
 </body>
 </html>
