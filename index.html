@@ -1,281 +1,149 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#090711">
 <link rel="icon" type="image/png" href="/logo.png">
 <title>Lumia AI</title>
 
 <style>
-:root {
-  --bg:#090711;
-  --panel:#0d0b16;
-  --border:rgba(255,255,255,.08);
-  --purple:#a477ff;
-  --text:#f5f1ff;
-  --muted:#9690aa;
-}
+:root{--bg:#090711;--panel:#100d1a;--border:#ffffff13;--purple:#a477ff;--text:#f5f1ff;--muted:#9690aa}
 *{box-sizing:border-box}
-body{
-  margin:0;height:100vh;height:100dvh;overflow:hidden;
-  background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg);
-  color:var(--text);
-  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-button,textarea,input{font:inherit}
-button{cursor:pointer}
-button:focus-visible,input:focus-visible,textarea:focus-visible{
-  outline:2px solid var(--purple);outline-offset:2px
-}
-button:disabled{cursor:wait;opacity:.55}
-.app{display:flex;width:100%;height:100%}
-
-/* SIDEBAR */
-.sidebar{
-  width:270px;flex-shrink:0;display:flex;flex-direction:column;
-  padding:22px 13px 16px;background:rgba(12,10,21,.94);
-  border-right:1px solid var(--border)
-}
-.brand{display:flex;align-items:center;gap:11px;margin-bottom:29px;padding:0 7px}
+body{margin:0;height:100vh;height:100dvh;overflow:hidden;background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,textarea,input{font:inherit}button{cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.app{display:flex;height:100%;width:100%}
+.sidebar{width:270px;flex-shrink:0;display:flex;flex-direction:column;padding:22px 13px 16px;background:#0c0a15f2;border-right:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:11px;margin:0 0 29px;padding:0 7px}
 .brand img{width:43px;height:43px;object-fit:contain}
-.brand-name{font-size:21px;font-weight:750;letter-spacing:-.8px}
-.brand-name span{color:var(--purple)}
-.new-chat{
-  width:100%;padding:13px;border:1px solid #50386f;
-  border-radius:13px;background:linear-gradient(120deg,#39245c,#211637);
-  color:white;text-align:left;transition:.2s
-}
-.new-chat:hover{border-color:var(--purple);background:#302044}
-.section-label{
-  margin:27px 9px 12px;color:var(--muted);
-  font-size:10px;font-weight:700;letter-spacing:1.5px
-}
+.brand-name{font-size:21px;font-weight:750;letter-spacing:-.8px}.brand-name span{color:var(--purple)}
+.new-chat{width:100%;padding:13px;border:1px solid #50386f;border-radius:13px;background:linear-gradient(120deg,#39245c,#211637);color:white;text-align:left}
+.new-chat:hover{border-color:var(--purple)}
+.section-label{margin:27px 9px 12px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1.5px}
 .history{flex:1;overflow-y:auto;overflow-x:hidden}
-.history::-webkit-scrollbar{width:4px}
-.history::-webkit-scrollbar-thumb{background:#40334f;border-radius:10px}
-.history-row{
-  display:flex;align-items:center;gap:2px;position:relative;
-  margin:3px 0;border-radius:10px;transition:background .18s
-}
-.history-row:hover,.history-row.active{background:rgba(164,119,255,.09)}
-.history-row.active:before{
-  content:"";position:absolute;left:0;top:9px;bottom:9px;
-  width:3px;border-radius:4px;background:var(--purple)
-}
-.history-item{
-  display:flex;align-items:center;gap:8px;flex:1;min-width:0;
-  padding:11px 8px 11px 12px;border:0;background:transparent;
-  color:#c9c2d9;text-align:left;border-radius:9px
-}
-.history-item:hover,.history-row.active .history-item{color:#fff}
-.history-title{
-  display:block;flex:1;min-width:0;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap;font-size:12px
-}
-.pin-indicator{display:inline-flex;flex-shrink:0;color:#bda0ff;font-size:12px}
-.chat-actions{display:flex;align-items:center;gap:1px;padding-right:5px;opacity:0;transition:opacity .18s}
+.history-row{display:flex;align-items:center;gap:2px;margin:3px 0;border-radius:10px}
+.history-row:hover,.history-row.active{background:#a477ff17}
+.history-item{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:11px 8px 11px 12px;border:0;background:transparent;color:#c9c2d9;text-align:left}
+.history-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;flex:1}
+.chat-actions{display:flex;gap:1px;padding-right:5px;opacity:0}
 .history-row:hover .chat-actions,.history-row.active .chat-actions,.history-row:focus-within .chat-actions{opacity:1}
-.chat-action{
-  display:grid;place-items:center;width:27px;height:29px;
-  border:0;border-radius:7px;background:transparent;color:#91879f;
-  padding:0;transition:background .18s,color .18s
-}
-.chat-action:hover{background:#ffffff12;color:white}
-.chat-action.pinned{color:#c3a4ff}
-.chat-action svg{width:15px;height:15px;display:block}
-.history-empty{padding:10px 9px;color:#777086;font-size:12px;line-height:1.6}
+.chat-action{display:grid;place-items:center;width:28px;height:29px;border:0;border-radius:7px;background:transparent;color:#a99dbb}
+.chat-action:hover{background:#ffffff12;color:white}.chat-action.pinned{color:#c3a4ff}
+.chat-action svg{width:15px;height:15px}
+.pin-indicator{color:#c3a4ff;font-size:13px}
+.history-empty{padding:10px;color:#777086;font-size:12px;line-height:1.6}
 .sidebar-footer{padding:15px 8px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
-.dot{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#a477ff;box-shadow:0 0 10px #a477ff}
-
-/* AREA PRINCIPALE */
+.dot{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 10px var(--purple)}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.topbar{
-  height:75px;flex-shrink:0;display:flex;align-items:center;
-  justify-content:flex-end;padding:0 30px;border-bottom:1px solid var(--border);
-  background:rgba(9,7,17,.35);backdrop-filter:blur(20px)
-}
+.topbar{height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding:0 25px;border-bottom:1px solid var(--border);background:#09071155;backdrop-filter:blur(20px)}
 .top-tag{padding:7px 11px;border:1px solid var(--border);border-radius:20px;color:#b7a6d8;font-size:11px}
 .mobile-brand,.mobile-menu,.sidebar-overlay{display:none}
 .chat{flex:1;min-height:0;overflow-y:auto;scroll-behavior:smooth}
-.welcome{
-  min-height:100%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:30px 20px 45px;text-align:center
-}
-.hero-logo{width:115px;height:115px;object-fit:contain;filter:drop-shadow(0 0 28px #7d46ff55);animation:float 5s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.welcome{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px 45px;text-align:center}
+.hero-logo{width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 0 28px #7d46ff55);animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px)}}
 .welcome h1{margin:20px 0 10px;font-size:clamp(32px,5vw,49px);letter-spacing:-2px}
 .gradient{background:linear-gradient(100deg,#d6c0ff,#9c70ff,#64d9ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .welcome p{max-width:440px;margin:0;color:var(--muted);line-height:1.7;font-size:14px}
 .suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(560px,100%);margin-top:30px}
-.suggestion{
-  min-height:83px;padding:15px;border:1px solid var(--border);border-radius:14px;
-  background:rgba(255,255,255,.025);color:white;text-align:left;transition:.2s
-}
+.suggestion{min-height:83px;padding:15px;border:1px solid var(--border);border-radius:14px;background:#ffffff06;color:white;text-align:left;transition:.2s}
 .suggestion:hover{background:#a477ff18;border-color:#7250a9;transform:translateY(-2px)}
-.suggestion strong{display:block;margin-bottom:7px;font-size:12px}
-.suggestion small{color:var(--muted);font-size:11px}
+.suggestion strong{display:block;margin-bottom:7px;font-size:12px}.suggestion small{color:var(--muted);font-size:11px}
 .messages{width:min(800px,100%);margin:0 auto;padding:30px 25px}
 .message{display:flex;gap:13px;margin-bottom:25px;animation:appear .25s ease}
 @keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
-.avatar{
-  width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;
-  border:1px solid var(--border);border-radius:11px;background:#211633;font-size:12px
-}
-.message.user .avatar{background:#29223a}
+.avatar{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border:1px solid var(--border);border-radius:11px;background:#211633;font-size:12px}
 .message-body{min-width:0;padding-top:3px;line-height:1.75;font-size:14px;overflow-wrap:anywhere}
 .message-name{margin-bottom:5px;font-size:12px;font-weight:700;color:#c7b1ff}
 .message.user .message-name{color:#d7d0e8}
-.message-text{white-space:pre-wrap}
-.message.error .message-text{color:#ffaaaa}
-.thinking-avatar{overflow:visible;background:transparent;border:0}
-.thinking-logo{display:block;width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 9px #a477ff88);animation:lumia-thinking 1.2s ease-in-out infinite}
-@keyframes lumia-thinking{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
-.typing{color:var(--muted);animation:pulse 1.2s infinite}
-@keyframes pulse{50%{opacity:.4}}
+.message-text{white-space:pre-wrap}.message.error .message-text{color:#ffaaaa}
+.thinking-logo{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 9px #a477ff88);animation:float 1.2s ease-in-out infinite}
 .composer-area{flex-shrink:0;padding:12px 24px 20px;background:linear-gradient(transparent,var(--bg) 25%)}
-.composer{
-  width:min(800px,100%);margin:0 auto;padding:12px 12px 10px 17px;
-  border:1px solid #a477ff45;border-radius:19px;background:rgba(22,18,34,.95);transition:border-color .2s
-}
+.composer{width:min(800px,100%);margin:0 auto;padding:12px 12px 10px 17px;border:1px solid #a477ff45;border-radius:19px;background:#161222f2}
 .composer:focus-within{border-color:#a477ffb0}
-textarea{
-  display:block;width:100%;max-height:150px;min-height:35px;resize:none;
-  border:0;outline:none;background:transparent;color:white;line-height:1.6;font-size:14px
-}
+textarea{display:block;width:100%;max-height:150px;min-height:35px;resize:none;border:0;outline:none;background:transparent;color:white;line-height:1.6;font-size:14px}
 textarea::placeholder{color:#777086}
 .composer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:10px}
 .composer-hint{color:#777086;font-size:10px}
-.send{
-  display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;
-  border:0;border-radius:12px;background:linear-gradient(135deg,#b18aff,#8051e8);
-  color:white;font-size:19px
-}
+.send{display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;border:0;border-radius:12px;background:linear-gradient(135deg,#b18aff,#8051e8);color:white;font-size:19px}
+.send:disabled{opacity:.5;cursor:wait}
 .disclaimer{margin-top:10px;color:#716b80;font-size:10px;text-align:center}
-
-/* MODALE RINOMINA */
-.modal-backdrop{
-  position:fixed;inset:0;z-index:100;display:flex;align-items:center;
-  justify-content:center;padding:20px;background:rgba(0,0,0,.65);backdrop-filter:blur(7px)
-}
+.modal-backdrop{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:#000a;backdrop-filter:blur(7px)}
 .modal-backdrop[hidden]{display:none}
-.rename-modal{width:min(400px,100%);padding:22px;border:1px solid #49365f;border-radius:18px;background:#151020;box-shadow:0 20px 70px #0008}
-.rename-modal h2{margin:0 0 8px;font-size:19px}
-.rename-modal p{margin:0 0 17px;color:var(--muted);font-size:13px}
-.rename-input{width:100%;padding:12px;border:1px solid #594271;border-radius:10px;background:#0d0a16;color:white;outline:none}
-.rename-input:focus{border-color:var(--purple)}
+.rename-modal{width:min(400px,100%);padding:22px;border:1px solid #49365f;border-radius:18px;background:#151020}
+.rename-modal h2{margin:0 0 8px;font-size:19px}.rename-modal p{margin:0 0 17px;color:var(--muted);font-size:13px}
+.rename-input{width:100%;padding:12px;border:1px solid #594271;border-radius:10px;background:#0d0a16;color:white}
 .modal-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
 .modal-button{padding:10px 14px;border:1px solid var(--border);border-radius:9px;background:#211a2e;color:white}
 .modal-button.primary{border-color:transparent;background:#8051e8}
-
 @media(hover:none){.chat-actions{opacity:1}.chat-action{width:30px}}
 @media(max-width:700px){
-  .sidebar{
-    position:fixed;z-index:30;inset:0 auto 0 0;width:min(290px,85vw);
-    height:100%;height:100dvh;transform:translateX(-105%);transition:transform .25s ease;
-    box-shadow:15px 0 45px #0006
-  }
-  .sidebar.open{transform:translateX(0)}
-  .sidebar-overlay{
-    display:block;position:fixed;z-index:20;inset:0;border:0;
-    background:rgba(0,0,0,.55);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s
-  }
-  .sidebar-overlay.visible{opacity:1;visibility:visible}
-  .topbar{height:65px;min-height:65px;justify-content:flex-start;gap:12px;padding:0 14px}
-  .mobile-menu{
-    display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;
-    border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.04);color:white;font-size:23px
-  }
-  .mobile-brand{display:flex;align-items:center;gap:9px;min-width:0;font-size:17px;font-weight:750;letter-spacing:-.5px}
-  .mobile-brand img{display:block;width:34px;height:34px;object-fit:contain}
-  .top-tag{display:none}
-  .welcome{padding:25px 18px}
-  .hero-logo{width:88px;height:88px}
-  .welcome h1{letter-spacing:-1px}
-  .suggestions{grid-template-columns:1fr;margin-top:23px}
-  .suggestion{min-height:68px}
-  .messages{padding:22px 16px}
-  .composer-area{padding:10px 12px max(14px,env(safe-area-inset-bottom))}
-  .composer-hint{font-size:9px}
+.sidebar{position:fixed;z-index:30;inset:0 auto 0 0;width:min(290px,85vw);height:100%;height:100dvh;transform:translateX(-105%);transition:transform .25s;box-shadow:15px 0 45px #0006}
+.sidebar.open{transform:translateX(0)}
+.sidebar-overlay{display:block;position:fixed;z-index:20;inset:0;border:0;background:#0009;opacity:0;visibility:hidden;transition:.25s}
+.sidebar-overlay.visible{opacity:1;visibility:visible}
+.topbar{height:65px;justify-content:flex-start;gap:12px;padding:0 14px}
+.mobile-menu{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border:1px solid var(--border);border-radius:11px;background:#ffffff09;color:white;font-size:23px}
+.mobile-brand{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:750}
+.mobile-brand img{width:34px;height:34px;object-fit:contain}.top-tag{display:none}
+.welcome{padding:25px 18px}.hero-logo{width:88px;height:88px}.welcome h1{letter-spacing:-1px}
+.suggestions{grid-template-columns:1fr;margin-top:23px}.suggestion{min-height:68px}
+.messages{padding:22px 16px}.composer-area{padding:10px 12px max(14px,env(safe-area-inset-bottom))}
+.composer-hint{font-size:9px}
 }
 </style>
 </head>
 
 <body>
 <div class="app">
-  <button class="sidebar-overlay" id="sidebarOverlay" aria-label="Chiudi cronologia" hidden></button>
+<button class="sidebar-overlay" id="sidebarOverlay" aria-label="Chiudi cronologia" hidden></button>
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><img src="/logo.png" alt="Lumia AI"><div class="brand-name">Lumia <span>AI</span></div></div>
+  <button class="new-chat" id="newChat">＋ &nbsp; Nuova conversazione</button>
+  <div class="section-label">LE TUE CONVERSAZIONI</div>
+  <div class="history" id="history"></div>
+  <div class="sidebar-footer"><span class="dot"></span>AI online</div>
+</aside>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <img src="/logo.png" alt="Lumia AI">
-      <div class="brand-name">Lumia <span>AI</span></div>
+<main class="main">
+<header class="topbar">
+  <button class="mobile-menu" id="mobileMenu" aria-label="Apri cronologia" aria-expanded="false">☰</button>
+  <div class="mobile-brand"><img src="/logo.png" alt=""><span>Lumia AI</span></div>
+  <div class="top-tag">✦ &nbsp; AI ONLINE</div>
+</header>
+
+<section class="chat" id="chat">
+  <div class="welcome" id="welcome">
+    <img class="hero-logo" src="/logo.png" alt="Logo Lumia AI">
+    <h1>Benvenuto in <span class="gradient">Lumia.</span></h1>
+    <p>Uno spazio per le tue idee, le tue domande e i tuoi progetti. Da dove vuoi iniziare?</p>
+    <div class="suggestions">
+      <button class="suggestion" data-prompt="Insegnami qualcosa di sorprendente sulla tecnologia."><strong>✧ Scopri qualcosa</strong><small>Esplora nuove idee e tecnologie</small></button>
+      <button class="suggestion" data-prompt="Aiutami a progettare un'app originale."><strong>⌘ Crea un progetto</strong><small>Trasforma un'idea in qualcosa di concreto</small></button>
+      <button class="suggestion" data-prompt="Fammi un indovinello di logica difficile."><strong>◇ Metti alla prova la mente</strong><small>Logica, enigmi e ragionamento</small></button>
+      <button class="suggestion" data-prompt="Spiegami un argomento difficile in modo semplice, con esempi."><strong>↗ Impara meglio</strong><small>Capisci anche gli argomenti complessi</small></button>
     </div>
+  </div>
+  <div class="messages" id="messages" hidden></div>
+</section>
 
-    <button class="new-chat" id="newChat">＋ &nbsp; Nuova conversazione</button>
-
-    <div class="section-label">LE TUE CONVERSAZIONI</div>
-    <div class="history" id="history"></div>
-
-    <div class="sidebar-footer"><span class="dot"></span>AI online</div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <button class="mobile-menu" id="mobileMenu" aria-label="Apri cronologia" aria-expanded="false">☰</button>
-      <div class="mobile-brand">
-        <img src="/logo.png" alt="Logo Lumia AI">
-        <span>Lumia AI</span>
-      </div>
-      <div class="top-tag">✦ &nbsp; AI ONLINE</div>
-    </header>
-
-    <section class="chat" id="chat">
-      <div class="welcome" id="welcome">
-        <img class="hero-logo" src="/logo.png" alt="Logo Lumia AI">
-        <h1>Benvenuto in <span class="gradient">Lumia.</span></h1>
-        <p>Uno spazio per le tue idee, le tue domande e i tuoi progetti. Da dove vuoi iniziare?</p>
-
-        <div class="suggestions">
-          <button class="suggestion" data-prompt="Insegnami qualcosa di sorprendente sulla tecnologia.">
-            <strong>✧ Scopri qualcosa</strong><small>Esplora nuove idee e tecnologie</small>
-          </button>
-          <button class="suggestion" data-prompt="Aiutami a progettare un'app originale.">
-            <strong>⌘ Crea un progetto</strong><small>Trasforma un'idea in qualcosa di concreto</small>
-          </button>
-          <button class="suggestion" data-prompt="Fammi un indovinello di logica difficile.">
-            <strong>◇ Metti alla prova la mente</strong><small>Logica, enigmi e ragionamento</small>
-          </button>
-          <button class="suggestion" data-prompt="Spiegami un argomento difficile in modo semplice, con esempi.">
-            <strong>↗ Impara meglio</strong><small>Capisci anche gli argomenti complessi</small>
-          </button>
-        </div>
-      </div>
-      <div class="messages" id="messages" hidden></div>
-    </section>
-
-    <footer class="composer-area">
-      <form class="composer" id="composer">
-        <textarea id="prompt" rows="1" placeholder="Scrivi un messaggio a Lumia..." aria-label="Messaggio"></textarea>
-        <div class="composer-bottom">
-          <span class="composer-hint">INVIO per inviare · SHIFT + INVIO per andare a capo</span>
-          <button class="send" id="send" type="submit" aria-label="Invia messaggio">↑</button>
-        </div>
-      </form>
-      <div class="disclaimer" id="disclaimer">Lumia AI · Le conversazioni sono salvate su questo browser.</div>
-    </footer>
-  </main>
+<footer class="composer-area">
+  <form class="composer" id="composer">
+    <textarea id="prompt" rows="1" placeholder="Scrivi un messaggio a Lumia..." aria-label="Messaggio"></textarea>
+    <div class="composer-bottom"><span class="composer-hint">INVIO per inviare · SHIFT + INVIO per andare a capo</span><button class="send" id="send" type="submit" aria-label="Invia messaggio">↑</button></div>
+  </form>
+  <div class="disclaimer" id="disclaimer">Lumia AI · Le conversazioni sono salvate su questo browser.</div>
+</footer>
+</main>
 </div>
 
 <div class="modal-backdrop" id="renameModal" hidden>
-  <form class="rename-modal" id="renameForm">
-    <h2>Rinomina conversazione</h2>
-    <p>Scegli un nome facile da riconoscere.</p>
-    <input class="rename-input" id="renameInput" maxlength="80" placeholder="Nome della conversazione" required>
-    <div class="modal-buttons">
-      <button class="modal-button" id="cancelRename" type="button">Annulla</button>
-      <button class="modal-button primary" type="submit">Salva nome</button>
-    </div>
-  </form>
+<form class="rename-modal" id="renameForm">
+  <h2>Rinomina conversazione</h2><p>Scegli un nome facile da riconoscere.</p>
+  <input class="rename-input" id="renameInput" maxlength="80" placeholder="Nome della conversazione" required>
+  <div class="modal-buttons"><button class="modal-button" id="cancelRename" type="button">Annulla</button><button class="modal-button primary" type="submit">Salva nome</button></div>
+</form>
 </div>
 
 <script>
@@ -283,7 +151,6 @@ textarea::placeholder{color:#777086}
 
 const $ = id => document.getElementById(id);
 const STORAGE_KEY = "lumia_ai_conversations_v1";
-const DEFAULT_TITLE = "Nuova conversazione";
 
 const chat = $("chat");
 const welcome = $("welcome");
@@ -305,26 +172,37 @@ let renamingId = null;
 function loadConversations() {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-
-    return Array.isArray(value) ? value.map(c => ({
+    if (!Array.isArray(value)) return [];
+    return value.filter(c => c && typeof c === "object").map(c => ({
       ...c,
-      title: typeof c.title === "string" && c.title.trim() ? c.title : DEFAULT_TITLE,
+      id: c.id || makeId(),
+      title: c.title || "Nuova conversazione",
       pinned: Boolean(c.pinned),
       manualTitle: Boolean(c.manualTitle),
       messages: Array.isArray(c.messages) ? c.messages : []
-    })) : [];
+    })).filter(c => c.messages.length > 0);
   } catch (error) {
-    console.error("Errore caricamento cronologia:", error);
+    console.error("Impossibile leggere la cronologia:", error);
     return [];
   }
 }
 
+function makeId() {
+  return crypto.randomUUID ? crypto.randomUUID() :
+    "chat-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+}
+
 function saveConversations() {
   try {
+    // Non salvare mai conversazioni vuote.
+    conversations = conversations.filter(c => c.messages && c.messages.length > 0);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+    $("disclaimer").textContent = "Lumia AI · Le conversazioni sono salvate su questo browser.";
+    return true;
   } catch (error) {
     console.error("Errore salvataggio cronologia:", error);
-    $("disclaimer").textContent = "Impossibile salvare la cronologia in questo browser.";
+    $("disclaimer").textContent = "Attenzione: il browser non è riuscito a salvare le chat.";
+    return false;
   }
 }
 
@@ -339,6 +217,15 @@ function sortedConversations() {
   });
 }
 
+function closeSidebar() {
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("visible");
+  mobileMenu.setAttribute("aria-expanded", "false");
+  setTimeout(() => {
+    if (!sidebarOverlay.classList.contains("visible")) sidebarOverlay.hidden = true;
+  }, 250);
+}
+
 function openSidebar() {
   sidebar.classList.add("open");
   sidebarOverlay.hidden = false;
@@ -346,68 +233,40 @@ function openSidebar() {
   mobileMenu.setAttribute("aria-expanded", "true");
 }
 
-function closeSidebar() {
-  sidebar.classList.remove("open");
-  sidebarOverlay.classList.remove("visible");
-  mobileMenu.setAttribute("aria-expanded", "false");
-
-  setTimeout(() => {
-    if (!sidebarOverlay.classList.contains("visible")) sidebarOverlay.hidden = true;
-  }, 250);
-}
-
 function toggleSidebar() {
   sidebar.classList.contains("open") ? closeSidebar() : openSidebar();
 }
 
-/* Non salva una chat vuota: la crea solo al primo messaggio inviato. */
 function newConversation() {
   if (busy) return;
 
+  // La nuova chat esiste solo in memoria finché non viene inviato un messaggio.
   currentId = null;
   renderHistory();
   showWelcome();
-  closeSidebar();
   promptBox.value = "";
   promptBox.style.height = "auto";
+  closeSidebar();
   promptBox.focus();
-}
-
-function createConversation() {
-  const conversation = {
-    id: crypto.randomUUID(),
-    title: DEFAULT_TITLE,
-    messages: [],
-    pinned: false,
-    manualTitle: false
-  };
-
-  conversations.unshift(conversation);
-  currentId = conversation.id;
-
-  return conversation;
 }
 
 function deleteConversation(id) {
   if (busy) return;
-
   conversations = conversations.filter(c => c.id !== id);
 
-  if (currentId === id) {
-    currentId = null;
-    showWelcome();
-  }
+  if (currentId === id) currentId = null;
 
   saveConversations();
   renderHistory();
+
+  if (currentId) renderMessages();
+  else showWelcome();
 }
 
 function togglePin(id) {
   if (busy) return;
-
   const conversation = conversations.find(c => c.id === id);
   if (!conversation) return;
-
   conversation.pinned = !conversation.pinned;
   saveConversations();
   renderHistory();
@@ -415,14 +274,12 @@ function togglePin(id) {
 
 function openRename(id) {
   if (busy) return;
-
   const conversation = conversations.find(c => c.id === id);
   if (!conversation) return;
 
   renamingId = id;
-  renameInput.value = conversation.title || "";
+  renameInput.value = conversation.title;
   renameModal.hidden = false;
-
   requestAnimationFrame(() => {
     renameInput.focus();
     renameInput.select();
@@ -439,24 +296,20 @@ $("renameForm").addEventListener("submit", event => {
   if (!renamingId) return;
 
   const conversation = conversations.find(c => c.id === renamingId);
-  const newTitle = renameInput.value.trim();
+  const title = renameInput.value.trim();
+  if (!conversation || !title) return;
 
-  if (!conversation || !newTitle) return;
-
-  conversation.title = newTitle.slice(0, 80);
+  conversation.title = title;
   conversation.manualTitle = true;
-
   saveConversations();
   renderHistory();
   closeRename();
 });
 
 $("cancelRename").addEventListener("click", closeRename);
-
 renameModal.addEventListener("click", event => {
   if (event.target === renameModal) closeRename();
 });
-
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
     closeSidebar();
@@ -464,7 +317,7 @@ document.addEventListener("keydown", event => {
   }
 });
 
-function createIcon(pathMarkup) {
+function createIcon(markup) {
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
@@ -473,13 +326,12 @@ function createIcon(pathMarkup) {
   svg.setAttribute("stroke-width", "1.8");
   svg.setAttribute("stroke-linecap", "round");
   svg.setAttribute("stroke-linejoin", "round");
-  svg.innerHTML = pathMarkup;
+  svg.innerHTML = markup;
   return svg;
 }
 
 function renderHistory() {
   historyBox.replaceChildren();
-
   const ordered = sortedConversations();
 
   if (!ordered.length) {
@@ -500,21 +352,19 @@ function renderHistory() {
     select.title = conversation.title;
 
     if (conversation.pinned) {
-      const pinIndicator = document.createElement("span");
-      pinIndicator.className = "pin-indicator";
-      pinIndicator.textContent = "⌖";
-      pinIndicator.title = "Chat fissata";
-      select.appendChild(pinIndicator);
+      const pinMark = document.createElement("span");
+      pinMark.className = "pin-indicator";
+      pinMark.textContent = "⌖";
+      select.appendChild(pinMark);
     }
 
     const title = document.createElement("span");
     title.className = "history-title";
-    title.textContent = conversation.title || DEFAULT_TITLE;
+    title.textContent = conversation.title;
     select.appendChild(title);
 
     select.addEventListener("click", () => {
       if (busy) return;
-
       currentId = conversation.id;
       renderHistory();
       renderMessages();
@@ -529,9 +379,7 @@ function renderHistory() {
     rename.className = "chat-action";
     rename.title = "Rinomina chat";
     rename.setAttribute("aria-label", "Rinomina " + conversation.title);
-    rename.appendChild(createIcon(
-      '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>'
-    ));
+    rename.appendChild(createIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>'));
     rename.addEventListener("click", event => {
       event.stopPropagation();
       openRename(conversation.id);
@@ -542,9 +390,7 @@ function renderHistory() {
     pin.className = "chat-action" + (conversation.pinned ? " pinned" : "");
     pin.title = conversation.pinned ? "Rimuovi dai fissati" : "Fissa in alto";
     pin.setAttribute("aria-label", pin.title);
-    pin.appendChild(createIcon(
-      '<path d="m16 3 5 5-4 1-4 4-1 5-2-2-2 5-2-2 5-2-2-2 5-1 4-4 1Z"/>'
-    ));
+    pin.appendChild(createIcon('<path d="m16 3 5 5-4 1-4 4-1 5-2-2-2 5-2-2 5-2-2-2 5-1 4-4 1Z"/>'));
     pin.addEventListener("click", event => {
       event.stopPropagation();
       togglePin(conversation.id);
@@ -553,16 +399,12 @@ function renderHistory() {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "chat-action";
-    remove.title = "Elimina conversazione";
+    remove.title = "Elimina chat";
     remove.setAttribute("aria-label", "Elimina " + conversation.title);
-    remove.appendChild(createIcon(
-      '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/>'
-    ));
+    remove.textContent = "×";
     remove.addEventListener("click", event => {
       event.stopPropagation();
-      if (confirm("Vuoi eliminare questa conversazione?")) {
-        deleteConversation(conversation.id);
-      }
+      deleteConversation(conversation.id);
     });
 
     actions.append(rename, pin, remove);
@@ -604,7 +446,6 @@ function renderMessages() {
       logo.alt = "Lumia AI";
       logo.className = "thinking-logo";
       logo.style.animation = "none";
-      avatar.classList.add("thinking-avatar");
       avatar.appendChild(logo);
     }
 
@@ -637,6 +478,11 @@ function addMessage(role, content, options = {}) {
     ...(options.error ? { error: true } : {})
   });
 
+  if (role === "user" && !conversation.manualTitle &&
+      conversation.title === "Nuova conversazione") {
+    conversation.title = content.slice(0, 32) + (content.length > 32 ? "…" : "");
+  }
+
   saveConversations();
   renderHistory();
   renderMessages();
@@ -651,7 +497,7 @@ function showTyping() {
   row.id = "typingIndicator";
 
   const avatar = document.createElement("div");
-  avatar.className = "avatar thinking-avatar";
+  avatar.className = "avatar";
 
   const logo = document.createElement("img");
   logo.src = "/logo.png";
@@ -667,7 +513,7 @@ function showTyping() {
   name.textContent = "Lumia AI";
 
   const text = document.createElement("div");
-  text.className = "message-text typing";
+  text.className = "message-text";
   text.textContent = "Lumia sta pensando…";
 
   body.append(name, text);
@@ -676,64 +522,65 @@ function showTyping() {
   chat.scrollTop = chat.scrollHeight;
 }
 
-async function updateAutomaticTitle(conversationId) {
-  const conversation = conversations.find(c => c.id === conversationId);
+async function readAIResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
 
-  if (!conversation || conversation.manualTitle) return;
-
-  const messages = conversation.messages
-    .filter(message => !message.error)
-    .slice(-20)
-    .map(message => ({
-      role: message.role,
-      content: message.content
-    }));
-
-  if (!messages.some(message => message.role === "assistant")) return;
-
-  try {
-    const response = await fetch("/api/title", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages })
-    });
-
-    if (!response.ok) throw new Error("Generazione titolo non disponibile.");
-
+  // Compatibilità con server che restituiscono JSON.
+  if (contentType.includes("application/json")) {
     const data = await response.json();
-    const latest = conversations.find(c => c.id === conversationId);
-
-    if (!latest || latest.manualTitle) return;
-
-    if (typeof data.title === "string" && data.title.trim()) {
-      latest.title = data.title.trim()
-        .replace(/^["'“”]+|["'“”]+$/g, "")
-        .slice(0, 80);
-
-      saveConversations();
-      renderHistory();
+    if (!response.ok) throw new Error(data.error || "Errore del servizio AI.");
+    const reply = data.reply || data.response || data.message;
+    if (typeof reply !== "string" || !reply.trim()) {
+      throw new Error("L'AI non ha restituito una risposta valida.");
     }
-  } catch (error) {
-    console.warn("Titolo automatico non aggiornato:", error);
+    return reply;
   }
+
+  // Compatibilità con server che restituiscono testo in streaming.
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Errore del servizio AI.");
+  }
+
+  if (!response.body) {
+    const text = await response.text();
+    if (!text.trim()) throw new Error("Risposta vuota dal servizio AI.");
+    return text;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let result = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    result += decoder.decode(value, { stream: true });
+  }
+
+  result += decoder.decode();
+  if (!result.trim()) throw new Error("L'AI non ha restituito una risposta valida.");
+  return result;
 }
 
 async function sendMessage(rawText) {
   const content = rawText.trim();
   if (!content || busy) return;
 
-  /*
-   * La conversazione viene creata soltanto quando l'utente
-   * invia effettivamente il primo messaggio.
-   */
+  // Crea una conversazione soltanto quando arriva il primo messaggio.
   if (!currentId || !currentConversation()) {
-    createConversation();
+    currentId = makeId();
+    conversations.unshift({
+      id: currentId,
+      title: "Nuova conversazione",
+      messages: [],
+      pinned: false,
+      manualTitle: false
+    });
   }
 
   const conversation = currentConversation();
   if (!conversation) return;
-
-  const conversationId = conversation.id;
 
   busy = true;
   sendButton.disabled = true;
@@ -749,10 +596,7 @@ async function sendMessage(rawText) {
   try {
     const apiMessages = conversation.messages
       .filter(message => !message.error)
-      .map(message => ({
-        role: message.role,
-        content: message.content
-      }));
+      .map(message => ({ role: message.role, content: message.content }));
 
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -760,111 +604,52 @@ async function sendMessage(rawText) {
       body: JSON.stringify({ messages: apiMessages })
     });
 
-    if (!response.ok) {
-      let errorMessage = "Errore del servizio AI.";
+    const reply = await readAIResponse(response);
+    addMessage("assistant", reply);
+    $("disclaimer").textContent = "Lumia AI · Le conversazioni sono salvate su questo browser.";
 
-      try {
-        const errorData = await response.json();
-        if (errorData.error) errorMessage = errorData.error;
-      } catch {}
-
-      throw new Error(errorMessage);
-    }
-
-    if (!response.body) {
-      throw new Error("Il browser non supporta la risposta in streaming.");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let answer = "";
-
-    $("typingIndicator")?.remove();
-
-    const row = document.createElement("div");
-    row.className = "message assistant";
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar thinking-avatar";
-
-    const logo = document.createElement("img");
-    logo.src = "/logo.png";
-    logo.alt = "Lumia AI";
-    logo.className = "thinking-logo";
-    logo.style.animation = "none";
-    avatar.appendChild(logo);
-
-    const body = document.createElement("div");
-    body.className = "message-body";
-
-    const name = document.createElement("div");
-    name.className = "message-name";
-    name.textContent = "Lumia AI";
-
-    const text = document.createElement("div");
-    text.className = "message-text";
-
-    body.append(name, text);
-    row.append(avatar, body);
-    messagesBox.appendChild(row);
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-
-      answer += decoder.decode(value, { stream: true });
-      text.textContent = answer;
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    answer += decoder.decode();
-
-    if (!answer.trim()) {
-      throw new Error("L'AI non ha restituito una risposta valida.");
-    }
-
-    const latest = conversations.find(c => c.id === conversationId);
-
-    if (latest) {
-      latest.messages.push({ role: "assistant", content: answer });
-      saveConversations();
-    }
-
-    $("disclaimer").textContent =
-      "Lumia AI · Le conversazioni sono salvate su questo browser.";
-
-    await updateAutomaticTitle(conversationId);
-
+    // Genera un titolo migliore se il server supporta l'endpoint.
+    if (!conversation.manualTitle) updateAutomaticTitle(conversation.id);
   } catch (error) {
     console.error("Errore chat:", error);
-    $("typingIndicator")?.remove();
-
-    const partialMessage = messagesBox.querySelector(".message.assistant:last-child");
-
-    if (partialMessage && partialMessage.querySelector(".message-text")?.textContent) {
-      partialMessage.classList.add("error");
-      partialMessage.querySelector(".message-text").textContent +=
-        "\n\nConnessione interrotta. Riprova a inviare il messaggio.";
-    } else {
-      addMessage(
-        "assistant",
-        "Non riesco a completare la risposta.\n" + error.message,
-        { error: true }
-      );
-    }
-
+    addMessage("assistant", "Non riesco a completare la risposta.\n" + error.message, { error: true });
     $("disclaimer").textContent = "Connessione AI non riuscita.";
-
   } finally {
     $("typingIndicator")?.remove();
-
     busy = false;
     sendButton.disabled = false;
     promptBox.disabled = false;
     $("newChat").disabled = false;
-
     promptBox.focus();
     chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+async function updateAutomaticTitle(id) {
+  const conversation = conversations.find(c => c.id === id);
+  if (!conversation || conversation.manualTitle) return;
+
+  try {
+    const response = await fetch("/api/title", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: conversation.messages.map(m => ({ role: m.role, content: m.content }))
+      })
+    });
+
+    if (!response.ok) return;
+    const data = await response.json();
+    const title = typeof data.title === "string" ? data.title.trim() : "";
+
+    if (title && !conversation.manualTitle) {
+      conversation.title = title.slice(0, 80);
+      saveConversations();
+      renderHistory();
+    }
+  } catch (error) {
+    // Il titolo iniziale resta valido anche se il servizio titoli non è disponibile.
+    console.debug("Titolo automatico non disponibile:", error);
   }
 }
 
@@ -893,7 +678,7 @@ document.querySelectorAll("[data-prompt]").forEach(button => {
   button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
 
-/* AVVIO: nessuna nuova chat viene salvata automaticamente */
+// All'avvio: mostra sempre la schermata iniziale e non seleziona/crea una chat.
 currentId = null;
 renderHistory();
 showWelcome();
