@@ -94,11 +94,11 @@ body.xlarge-text .message-body{font-size:16px}
 #appearancePanel,#personalityPanel,#memoryPanel{scroll-margin-top:10px}
 /* Ogni tema mobile cambia l'atmosfera dell'intera interfaccia, non solo il colore del testo. */
 @media(max-width:700px){
-body[data-theme="blue"]{background:radial-gradient(ellipse at 50% -20%,#164d86,transparent 58%),linear-gradient(160deg,#07111e,#060a13 75%);--bg:#060a13;--panel:#0b1423;--border:#76baff24;--muted:#8ea9c8}
-body[data-theme="pink"]{background:radial-gradient(ellipse at 50% -20%,#7b245f,transparent 58%),linear-gradient(160deg,#1b0919,#100711 75%);--bg:#100711;--panel:#1b0d1c;--border:#ff9be52a;--muted:#c19ab8}
-body[data-theme="mint"]{background:radial-gradient(ellipse at 50% -20%,#155b4d,transparent 58%),linear-gradient(160deg,#071813,#06110f 75%);--bg:#06110f;--panel:#0c1c18;--border:#76f0ca25;--muted:#8fb9ad}
-body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d,transparent 58%),linear-gradient(160deg,#1b1008,#100b07 75%);--bg:#100b07;--panel:#1b120c;--border:#ffc08026;--muted:#c4a48a}
-body[data-theme="purple"]{background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg)}
+body[data-theme="blue"]{background:radial-gradient(ellipse at 50% -20%,#164d86,transparent 58%),linear-gradient(160deg,#07111e,#060a13 75%);--purple:#00aaff;--bg:#030b1b;--panel:#07152b;--border:#3baeff38;--muted:#9bbbd9}
+body[data-theme="pink"]{background:radial-gradient(ellipse at 50% -20%,#7b245f,transparent 58%),linear-gradient(160deg,#1b0919,#100711 75%);--purple:#ff16b9;--bg:#160514;--panel:#23091f;--border:#ff50d838;--muted:#d5a3c9}
+body[data-theme="mint"]{background:radial-gradient(ellipse at 50% -20%,#155b4d,transparent 58%),linear-gradient(160deg,#071813,#06110f 75%);--purple:#00e6a0;--bg:#03130f;--panel:#081e17;--border:#00e6a038;--muted:#91c9b6}
+body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d,transparent 58%),linear-gradient(160deg,#1b1008,#100b07 75%);--purple:#ff8200;--bg:#170900;--panel:#251104;--border:#ff9a3338;--muted:#d6b08b}
+body[data-theme="purple"]{background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg);--purple:#a477ff;--bg:#090711;--panel:#100d1a;--border:#ffffff16;--muted:#9690aa}
 body[data-theme="blue"] .sidebar,body[data-theme="blue"] #settingsModal .modal,body[data-theme="blue"] #devicesModal .modal{background:linear-gradient(155deg,#0c1b30f7,#080d18f8)}
 body[data-theme="pink"] .sidebar,body[data-theme="pink"] #settingsModal .modal,body[data-theme="pink"] #devicesModal .modal{background:linear-gradient(155deg,#281127f7,#100812f8)}
 body[data-theme="mint"] .sidebar,body[data-theme="mint"] #settingsModal .modal,body[data-theme="mint"] #devicesModal .modal{background:linear-gradient(155deg,#10251ff7,#07110ef8)}
@@ -393,11 +393,7 @@ function applyAppearance(){
   if(legacy[settings.accentColor])settings.accentColor=legacy[settings.accentColor];
   if(!themes[settings.accentColor])settings.accentColor="purple";
   const t=themes[settings.accentColor],root=document.documentElement;
-  root.style.setProperty("--purple",t.accent);
-  root.style.setProperty("--bg",t.bg);
-  root.style.setProperty("--panel",t.panel);
-  root.style.setProperty("--border",t.border);
-  root.style.setProperty("--muted",t.muted);
+  // Le variabili e i colori sono applicati solo dal CSS mobile: desktop invariato.
   document.body.dataset.theme=settings.accentColor;
   document.body.classList.toggle("no-animations",!settings.animationsEnabled);
   document.body.classList.toggle("large-text",settings.fontSize==="15");
