@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" href="/logo.png">
 <title>Lumia AI</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
 :root{--bg:#090711;--panel:#100d1a;--border:#ffffff16;--purple:#a477ff;--text:#f5f1ff;--muted:#9690aa}
 *{box-sizing:border-box}
@@ -284,9 +285,9 @@ function openModal(name){$(name).hidden=false}
 function closeModal(name){$(name).hidden=true}
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 $("settingsBtn").onclick=()=>openModal("settingsModal");
-$("openDevices").onclick=()=>{closeModal("settingsModal");openModal("devicesModal")};
+$("openDevices").onclick=()=>{closeModal("settingsModal");openModal("devicesModal");$("receivePanel").hidden=true;if(conversations.length){createTransfer()}else{$("sendPanel").hidden=false;$("qr").textContent="Nessuna chat da condividere";$("transferCode").textContent="--------";$("transferCountdown").textContent="Invia almeno un messaggio a Lumia per creare un trasferimento."}};
 $("privacyInfo").onclick=()=>{$("privacyPanel").hidden=!$("privacyPanel").hidden};
-$("openReceive").onclick=()=>{$("receivePanel").hidden=false;$("sendPanel").hidden=true;$("receiveStatus").textContent="Inserisci il codice di 8 cifre oppure scansiona il QR Code."};
+$("openReceive").onclick=()=>{$("receivePanel").hidden=false;$("sendPanel").hidden=true;$("importPreview").hidden=true;$("receiveStatus").textContent="Scegli Scansiona QR Code oppure inserisci il codice di 8 cifre.";stopScanner()};
 $("createTransfer").onclick=createTransfer;
 $("cancelTransfer").onclick=cancelTransfer;
 $("copyCode").onclick=async()=>{try{await navigator.clipboard.writeText(outgoingCode);$("transferCountdown").textContent="Codice copiato. Scade dopo 10 minuti."}catch{$("transferCountdown").textContent="Codice: "+outgoingCode}};
@@ -305,7 +306,12 @@ async function createTransfer(){
     const d=await r.json();if(!r.ok)throw Error(d.error||"Impossibile creare il trasferimento.");
     outgoingToken=d.token;outgoingCode=d.code;expiryAt=d.expiresAt;
     $("qr").replaceChildren();
-    new QRCode($("qr"),{text:JSON.stringify({type:"lumia-transfer",token:outgoingToken}),width:210,height:210,colorDark:"#160d24",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+    if(typeof QRCode!=="undefined"){
+      new QRCode($("qr"),{text:JSON.stringify({type:"lumia-transfer",token:outgoingToken}),width:210,height:210,colorDark:"#160d24",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+    }else{
+      $("qr").textContent="QR non disponibile: usa il codice numerico qui sotto.";
+      $("qr").style.width="min(100%,300px)";$("qr").style.minHeight="100px";$("qr").style.textAlign="center";$("qr").style.color="#160d24";
+    }
     $("transferCode").textContent=outgoingCode;
     $("sendPanel").hidden=false;$("receivePanel").hidden=true;
     if(expiryTimer)clearInterval(expiryTimer);
@@ -335,30 +341,46 @@ async function redeem(payload){
   finally{$("redeemCode").disabled=false}
 }
 async function startScanner(){
-  if(!("BarcodeDetector" in window)){ $("receiveStatus").textContent="Questo browser non supporta la scansione QR nativa. Usa il codice di 8 cifre.";return}
-  if(!navigator.mediaDevices?.getUserMedia){$("receiveStatus").textContent="La fotocamera richiede HTTPS e i permessi del browser. Usa il codice manuale.";return}
+  if(!navigator.mediaDevices?.getUserMedia){
+    $("receiveStatus").textContent="La fotocamera non è disponibile. Apri Lumia tramite HTTPS oppure inserisci il codice di 8 cifre.";
+    return;
+  }
+  if(typeof jsQR==="undefined"){
+    $("receiveStatus").textContent="Il lettore QR non è riuscito a caricarsi. Puoi comunque inserire il codice di 8 cifre qui sopra.";
+    return;
+  }
   try{
     scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
-    const video=$("scannerVideo");video.srcObject=scannerStream;video.hidden=false;await video.play();
-    $("stopScan").hidden=false;$("scanQr").disabled=true;scannerActive=true;
-    const detector=new BarcodeDetector({formats:["qr_code"]});
-    const scan=async()=>{
+    const video=$("scannerVideo");
+    video.srcObject=scannerStream;video.hidden=false;await video.play();
+    $("stopScan").hidden=false;$("scanQr").disabled=true;
+    scannerActive=true;
+    let canvas=document.createElement("canvas");
+    let context=canvas.getContext("2d",{willReadFrequently:true});
+    const scan=()=>{
       if(!scannerActive)return;
-      try{
-        const codes=await detector.detect(video);
-        if(codes.length){
-          const raw=codes[0].rawValue;let data;
-          try{data=JSON.parse(raw)}catch{data={token:raw}}
-          if(data.type==="lumia-transfer"&&data.token)await redeem({token:data.token});
-          else if(data.token)await redeem({token:data.token});
-          else $("receiveStatus").textContent="QR Code non riconosciuto.";
-          stopScanner();return;
+      if(video.readyState>=2&&video.videoWidth&&video.videoHeight){
+        canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+        context.drawImage(video,0,0,canvas.width,canvas.height);
+        const frame=context.getImageData(0,0,canvas.width,canvas.height);
+        const result=jsQR(frame.data,frame.width,frame.height,{inversionAttempts:"attemptBoth"});
+        if(result&&result.data){
+          let data;
+          try{data=JSON.parse(result.data)}catch{data={token:result.data}}
+          if(data.type==="lumia-transfer"&&data.token)redeem({token:data.token});
+          else if(data.token)redeem({token:data.token});
+          else $("receiveStatus").textContent="Questo QR Code non appartiene a Lumia AI.";
+          stopScanner();
+          return;
         }
-      }catch(e){console.debug(e)}
-      if(scannerActive)scannerTimer=setTimeout(scan,350);
+      }
+      if(scannerActive)scannerTimer=setTimeout(scan,250);
     };
     scan();
-  }catch(e){$("receiveStatus").textContent="Non riesco ad aprire la fotocamera. Controlla i permessi o usa il codice manuale."}
+  }catch(e){
+    $("receiveStatus").textContent="Non riesco ad aprire la fotocamera. Consenti l'accesso alla fotocamera oppure inserisci il codice di 8 cifre.";
+    stopScanner();
+  }
 }
 function stopScanner(){
   scannerActive=false;if(scannerTimer)clearTimeout(scannerTimer);scannerTimer=null;
