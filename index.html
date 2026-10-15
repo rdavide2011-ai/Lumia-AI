@@ -92,6 +92,56 @@ body.no-animations *,body.no-animations *::before,body.no-animations *::after{an
 body.large-text .message-body{font-size:15px}
 body.xlarge-text .message-body{font-size:16px}
 #appearancePanel,#personalityPanel,#memoryPanel{scroll-margin-top:10px}
+/* Impostazioni mobile: layout dedicato, senza cambiare la versione desktop. */
+@media(max-width:700px){
+#settingsModal .modal{
+  width:100%;height:100%;max-height:100dvh;max-height:100vh;
+  border:0;border-radius:0;padding:calc(20px + env(safe-area-inset-top)) 18px calc(22px + env(safe-area-inset-bottom));
+  background:radial-gradient(ellipse at 50% -12%,#51318b 0%,transparent 48%),linear-gradient(160deg,#100b1d,#0b0814 72%);
+}
+#settingsModal .modal-head{position:sticky;top:calc(-20px - env(safe-area-inset-top));z-index:3;margin:-4px -2px 20px;padding:9px 2px 15px;background:linear-gradient(#130d21f5,#130d21e8);backdrop-filter:blur(18px)}
+#settingsModal .modal-head h2{font-size:26px;letter-spacing:-.7px}
+#settingsModal .modal-head .muted{font-size:12px}
+#settingsModal .close{width:40px;height:40px;border-radius:50%;background:#ffffff12}
+#settingsModal .settings-grid{grid-template-columns:1fr;gap:11px}
+#settingsModal .setting-card{
+  position:relative;display:grid;grid-template-columns:42px minmax(0,1fr);column-gap:12px;align-items:center;
+  padding:16px;border:1px solid #ffffff12;border-radius:19px;
+  background:linear-gradient(125deg,#1d162b,#151020 72%);box-shadow:0 9px 26px #0002;
+}
+#settingsModal .setting-card h3{grid-column:2;grid-row:1;margin:0 0 4px;font-size:15px}
+#settingsModal .setting-card p{grid-column:2;grid-row:2;margin:0;padding-right:4px;font-size:11px;line-height:1.5}
+#settingsModal .setting-card h3::before{
+  content:"";position:absolute;left:16px;top:18px;width:38px;height:38px;border-radius:13px;
+  background:linear-gradient(145deg,#7951d5,#302047);box-shadow:inset 0 1px 0 #ffffff35;
+}
+#settingsModal .setting-card:nth-child(1) h3::before{content:"✧";display:grid;place-items:center;font-size:21px;color:#fff}
+#settingsModal .setting-card:nth-child(2) h3::before{content:"✦";display:grid;place-items:center;font-size:20px;color:#fff}
+#settingsModal .setting-card:nth-child(3) h3::before{content:"◎";display:grid;place-items:center;font-size:20px;color:#fff}
+#settingsModal .setting-card:nth-child(4) h3::before{content:"⇄";display:grid;place-items:center;font-size:20px;color:#fff}
+#settingsModal .setting-card:nth-child(5) h3::before{content:"♡";display:grid;place-items:center;font-size:20px;color:#fff}
+#settingsModal .setting-card .action{grid-column:1 / -1;margin-top:13px;text-align:center;border-radius:12px;padding:12px}
+#settingsModal .panel{
+  margin-top:14px;padding:18px;border:1px solid #ffffff16;border-radius:20px;
+  background:linear-gradient(145deg,#1b1428,#100c19);box-shadow:0 12px 32px #0003;
+}
+#settingsModal .panel h3{font-size:18px;letter-spacing:-.3px}
+#settingsModal .panel>.muted{font-size:12px}
+#settingsModal .settings-form{gap:11px}
+#settingsModal .settings-form>label:not(.check-row){font-size:12px;color:#cfc2e5}
+#settingsModal .field{min-height:46px;border-color:#ffffff18;border-radius:13px;background:#282034;color:#fff;font-size:14px}
+#settingsModal .settings-form textarea.field{min-height:100px}
+#settingsModal .settings-form .action{min-height:46px;border-radius:13px;text-align:center;background:linear-gradient(120deg,#7045bd,#392353)}
+#settingsModal .settings-form .action.secondary{background:#ffffff08;border-color:#ffffff17}
+#settingsModal .check-row{align-items:center;padding:9px 0;font-size:12px}
+#settingsModal .status{border:1px solid #ffffff10;border-radius:12px;background:#ffffff08}
+#settingsModal .panel[hidden]{display:none}
+#settingsModal .settings-grid[hidden]{display:none}
+#settingsModal .panel .code-display{font-size:26px}
+}
+@media(min-width:701px){
+#settingsModal .mobile-settings-back{display:none}
+}
 @media(max-width:700px){
 .sidebar{position:fixed;z-index:40;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;transform:translateX(-105%);transition:transform .25s;box-shadow:15px 0 45px #0006}
 .sidebar.open{transform:translateX(0)}
@@ -150,7 +200,7 @@ body.xlarge-text .message-body{font-size:16px}
 
 <div class="overlay" id="settingsModal" hidden>
 <div class="modal">
-  <div class="modal-head"><div><h2>Impostazioni</h2><div class="muted">Gestisci Lumia AI e i tuoi dispositivi.</div></div><button class="close" data-close="settingsModal">✕</button></div>
+  <div class="modal-head"><div><h2>Impostazioni</h2><div class="muted">Personalizza la tua esperienza con Lumia.</div></div><button class="close" data-close="settingsModal" aria-label="Chiudi impostazioni">✕</button></div>
   <div class="settings-grid">
     <div class="setting-card"><h3>🎨 Aspetto</h3><p class="muted">Personalizza colori, animazioni e dimensione del testo.</p><button class="action" id="openAppearance">Personalizza aspetto</button></div>
     <div class="setting-card"><h3>✦ Personalità</h3><p class="muted">Scegli come Lumia comunica e risponde.</p><button class="action" id="openPersonality">Personalizza risposte</button></div>
