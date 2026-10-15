@@ -30,11 +30,7 @@ body {
 button, textarea { font: inherit; }
 button { cursor: pointer; }
 
-.app {
-  display: flex;
-  width: 100%;
-  height: 100%;
-}
+.app { display: flex; width: 100%; height: 100%; }
 
 .sidebar {
   width: 270px;
@@ -54,18 +50,8 @@ button { cursor: pointer; }
   padding: 0 7px;
 }
 
-.brand img {
-  width: 43px;
-  height: 43px;
-  object-fit: contain;
-}
-
-.brand-name {
-  font-size: 21px;
-  font-weight: 750;
-  letter-spacing: -.8px;
-}
-
+.brand img { width: 43px; height: 43px; object-fit: contain; }
+.brand-name { font-size: 21px; font-weight: 750; letter-spacing: -.8px; }
 .brand-name span { color: var(--purple); }
 
 .new-chat {
@@ -89,10 +75,7 @@ button { cursor: pointer; }
   letter-spacing: 1.5px;
 }
 
-.history {
-  flex: 1;
-  overflow-y: auto;
-}
+.history { flex: 1; overflow-y: auto; }
 
 .history-row {
   display: flex;
@@ -156,30 +139,18 @@ button { cursor: pointer; }
   box-shadow: 0 0 10px #a477ff;
 }
 
-.main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .topbar {
   height: 75px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 30px;
   border-bottom: 1px solid var(--border);
   background: rgba(9,7,17,.35);
   backdrop-filter: blur(20px);
-}
-
-/* Barra superiore: solo il nome, senza icona e senza testo del provider */
-.model-label {
-  display: flex;
-  align-items: center;
-  font-size: 13px;
 }
 
 .top-tag {
@@ -190,12 +161,7 @@ button { cursor: pointer; }
   font-size: 11px;
 }
 
-.chat {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  scroll-behavior: smooth;
-}
+.chat { flex: 1; min-height: 0; overflow-y: auto; scroll-behavior: smooth; }
 
 .welcome {
   min-height: 100%;
@@ -266,22 +232,10 @@ button { cursor: pointer; }
   transform: translateY(-2px);
 }
 
-.suggestion strong {
-  display: block;
-  margin-bottom: 7px;
-  font-size: 12px;
-}
+.suggestion strong { display: block; margin-bottom: 7px; font-size: 12px; }
+.suggestion small { color: var(--muted); font-size: 11px; }
 
-.suggestion small {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.messages {
-  width: min(800px, 100%);
-  margin: 0 auto;
-  padding: 30px 25px;
-}
+.messages { width: min(800px, 100%); margin: 0 auto; padding: 30px 25px; }
 
 .message {
   display: flex;
@@ -317,33 +271,15 @@ button { cursor: pointer; }
   overflow-wrap: anywhere;
 }
 
-.message-name {
-  margin-bottom: 5px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #c7b1ff;
-}
-
+.message-name { margin-bottom: 5px; font-size: 12px; font-weight: 700; color: #c7b1ff; }
 .message.user .message-name { color: #d7d0e8; }
-
 .message-text { white-space: pre-wrap; }
 .message.error .message-text { color: #ffaaaa; }
 
-.typing {
-  color: var(--muted);
-  animation: pulse 1.2s infinite;
-}
+.typing { color: var(--muted); animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: .4; } }
 
-@keyframes pulse {
-  50% { opacity: .4; }
-}
-
-/* Il logo originale Lumia si muove mentre l'AI elabora */
-.thinking-avatar {
-  overflow: visible;
-  background: transparent;
-  border: 0;
-}
+.thinking-avatar { overflow: visible; background: transparent; border: 0; }
 
 .thinking-logo {
   display: block;
@@ -401,10 +337,7 @@ textarea::placeholder { color: #777086; }
   gap: 10px;
 }
 
-.composer-hint {
-  color: #777086;
-  font-size: 10px;
-}
+.composer-hint { color: #777086; font-size: 10px; }
 
 .send {
   display: grid;
@@ -421,20 +354,8 @@ textarea::placeholder { color: #777086; }
 
 .send:disabled { opacity: .5; cursor: wait; }
 
-.disclaimer {
-  margin-top: 10px;
-  color: #716b80;
-  font-size: 10px;
-  text-align: center;
-}
-
-.mobile-menu {
-  display: none;
-  border: 0;
-  background: transparent;
-  color: white;
-  font-size: 22px;
-}
+.disclaimer { margin-top: 10px; color: #716b80; font-size: 10px; text-align: center; }
+.mobile-menu { display: none; border: 0; background: transparent; color: white; font-size: 22px; }
 
 @media (max-width: 700px) {
   .sidebar {
@@ -481,12 +402,6 @@ textarea::placeholder { color: #777086; }
 
   <main class="main">
     <header class="topbar">
-      <div style="display:flex;align-items:center;gap:13px">
-        <button class="mobile-menu" id="mobileMenu" aria-label="Apri menu">☰</button>
-        <div class="model-label">
-          <strong>Lumia AI</strong>
-        </div>
-      </div>
       <div class="top-tag">✦ &nbsp; AI ONLINE</div>
     </header>
 
@@ -645,10 +560,7 @@ function renderHistory() {
     remove.textContent = "×";
     remove.title = "Elimina conversazione";
     remove.setAttribute("aria-label", "Elimina " + conversation.title);
-
-    remove.addEventListener("click", () => {
-      deleteConversation(conversation.id);
-    });
+    remove.addEventListener("click", () => deleteConversation(conversation.id));
 
     row.append(select, remove);
     historyBox.appendChild(row);
@@ -723,8 +635,7 @@ function addMessage(role, content, options = {}) {
   });
 
   if (role === "user" && conversation.title === "Nuova conversazione") {
-    conversation.title =
-      content.slice(0, 32) + (content.length > 32 ? "…" : "");
+    conversation.title = content.slice(0, 32) + (content.length > 32 ? "…" : "");
   }
 
   saveConversations();
@@ -747,7 +658,6 @@ function showTyping() {
   logo.src = "/logo.png";
   logo.alt = "Lumia AI";
   logo.className = "thinking-logo";
-
   avatar.appendChild(logo);
 
   const body = document.createElement("div");
@@ -811,12 +721,8 @@ async function sendMessage(rawText) {
 
     const response = await fetch("/api/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messages: apiMessages
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: apiMessages })
     });
 
     if (!response.ok) {
@@ -854,7 +760,6 @@ async function sendMessage(rawText) {
     }
 
     addMessage("assistant", answer);
-
     $("disclaimer").textContent =
       "Lumia AI · Le conversazioni sono salvate su questo browser.";
   } catch (error) {
@@ -868,12 +773,10 @@ async function sendMessage(rawText) {
     $("disclaimer").textContent = "Connessione AI non riuscita.";
   } finally {
     $("typingIndicator")?.remove();
-
     busy = false;
     sendButton.disabled = false;
     promptBox.disabled = false;
     $("newChat").disabled = false;
-
     promptBox.focus();
     chat.scrollTop = chat.scrollHeight;
   }
@@ -893,8 +796,7 @@ promptBox.addEventListener("keydown", event => {
 
 promptBox.addEventListener("input", () => {
   promptBox.style.height = "auto";
-  promptBox.style.height =
-    Math.min(promptBox.scrollHeight, 150) + "px";
+  promptBox.style.height = Math.min(promptBox.scrollHeight, 150) + "px";
 });
 
 $("newChat").addEventListener("click", newConversation);
@@ -904,9 +806,7 @@ $("mobileMenu").addEventListener("click", () => {
 });
 
 document.querySelectorAll("[data-prompt]").forEach(button => {
-  button.addEventListener("click", () => {
-    sendMessage(button.dataset.prompt);
-  });
+  button.addEventListener("click", () => sendMessage(button.dataset.prompt));
 });
 
 if (conversations.length) {
