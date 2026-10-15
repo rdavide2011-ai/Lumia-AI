@@ -364,6 +364,7 @@ body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d
     <div class="setting-card"><h3>🧠 Memoria</h3><p class="muted">Gestisci le informazioni che Lumia usa per personalizzare le risposte e le tue chat locali.</p><button class="action" id="openMemory">Gestisci memoria</button></div>
     <div class="setting-card"><h3>📱 Dispositivi</h3><p class="muted">Trasferisci le tue conversazioni su un altro dispositivo.</p><button class="action" id="openDevices">Gestisci dispositivi</button></div>
     <div class="setting-card"><h3>🔐 Privacy</h3><p class="muted">Scopri come vengono gestiti i tuoi dati.</p><button class="action secondary" id="privacyInfo">Informazioni privacy</button></div>
+    <div class="setting-card"><h3>ℹ️ Informazioni AI</h3><p class="muted">Scopri chi ha sviluppato Lumia, la versione e lo stato del servizio.</p><button class="action secondary" id="openAiInfo">Informazioni su Lumia</button></div>
   </div>
   <div class="panel" id="appearancePanel" hidden>
     <h3>🎨 Aspetto</h3><p class="muted">Le preferenze vengono salvate su questo browser.</p>
@@ -400,6 +401,17 @@ body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d
     </div>
   </div>
   <div class="panel" id="privacyPanel" hidden><p class="muted">Le conversazioni e la memoria personale vengono conservate nel browser. Quando invii un messaggio, il testo della conversazione e le preferenze pertinenti vengono inviati al server AI per generare la risposta. Il trasferimento tra dispositivi passa temporaneamente dal server: il codice è monouso e scade dopo 10 minuti.</p></div>
+  <div class="panel" id="aiInfoPanel" hidden>
+    <h3>ℹ️ Informazioni su Lumia AI</h3>
+    <p class="muted">Lumia AI è un progetto ideato, sviluppato e programmato personalmente da Davide, che ne cura l'interfaccia e le funzionalità.</p>
+    <div class="settings-form">
+      <label>Versione dell'app</label><div class="status">Lumia AI 1.0.0</div>
+      <label>Stato del servizio</label><div class="status" id="aiServiceStatus" role="status" aria-live="polite">Controllo della connessione…</div>
+      <label>Modello AI utilizzato</label><div class="status">Llama 3.1 8B Instruct tramite Cloudflare Workers AI</div>
+      <label>Sviluppo</label><div class="status">Progetto in evoluzione: interfaccia, funzionalità e istruzioni vengono aggiornate progressivamente.</div>
+      <button class="action secondary" id="checkAiStatus">Controlla connessione</button>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -503,12 +515,13 @@ function fillSettingsForm(){
   updateMemoryStats();
 }
 function hideSettingsPanels(){
-  ["appearancePanel","personalityPanel","memoryPanel","privacyPanel"].forEach(id=>$(id).hidden=true);
+  ["appearancePanel","personalityPanel","memoryPanel","privacyPanel","aiInfoPanel"].forEach(id=>$(id).hidden=true);
 }
 function openSettingsPanel(id){
   hideSettingsPanels();
   $(id).hidden=false;
   if(id==="memoryPanel")updateMemoryStats();
+  if(id==="aiInfoPanel")checkAiServiceStatus();
   $(id).scrollIntoView({behavior:settings.animationsEnabled?"smooth":"auto",block:"nearest"});
 }
 function updateMemoryStats(){
@@ -593,6 +606,19 @@ document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.
 $("settingsBtn").onclick=()=>openModal("settingsModal");
 $("openDevices").onclick=()=>{closeModal("settingsModal");openModal("devicesModal");$("receivePanel").hidden=true;if(conversations.length){createTransfer()}else{$("sendPanel").hidden=false;$("qr").textContent="Nessuna chat da condividere";$("transferCode").textContent="--------";$("transferCountdown").textContent="Invia almeno un messaggio a Lumia per creare un trasferimento."}};
 $("privacyInfo").onclick=()=>{const opening=$("privacyPanel").hidden;hideSettingsPanels();$("privacyPanel").hidden=!opening};
+$("openAiInfo").onclick=()=>openSettingsPanel("aiInfoPanel");
+$("checkAiStatus").onclick=checkAiServiceStatus;
+async function checkAiServiceStatus(){
+  const status=$("aiServiceStatus");if(!status)return;
+  status.textContent="Controllo della connessione…";
+  try{
+    const response=await fetch("/api/health",{cache:"no-store"});
+    const data=await response.json();
+    if(response.ok&&data.status==="online"&&data.aiConfigured){status.textContent="🟢 Online — server attivo e AI configurata."}
+    else if(response.ok&&data.status==="online"){status.textContent="🟡 Server online, ma AI non configurata."}
+    else{status.textContent="🔴 Servizio non disponibile al momento."}
+  }catch(error){status.textContent="🔴 Non riesco a raggiungere il server. Controlla la connessione e riprova."}
+}
 $("openAppearance").onclick=()=>openSettingsPanel("appearancePanel");
 $("openPersonality").onclick=()=>openSettingsPanel("personalityPanel");
 $("openMemory").onclick=()=>openSettingsPanel("memoryPanel");
