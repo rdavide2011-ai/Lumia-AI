@@ -140,6 +140,25 @@ body[data-theme="pink"] #settingsModal .field{background:#180d1b;border-color:#9
 body[data-theme="mint"] #settingsModal .field{background:#091712;border-color:#287e68}
 body[data-theme="orange"] #settingsModal .field{background:#170e08;border-color:#9e5d2b}
 }
+/* Palette coerente per ogni tema: elimina le superfici viola residue su mobile. */
+@media(max-width:700px){
+body[data-theme="blue"]{--bg:#030b1b;--panel:#07152b;--border:#3baeff38;--muted:#9bbbd9}
+body[data-theme="pink"]{--bg:#160514;--panel:#23091f;--border:#ff50d838;--muted:#d5a3c9}
+body[data-theme="mint"]{--bg:#03130f;--panel:#081e17;--border:#00e6a038;--muted:#91c9b6}
+body[data-theme="orange"]{--bg:#170900;--panel:#251104;--border:#ff9a3338;--muted:#d6b08b}
+body[data-theme="blue"] .setting-card h3::before{background:linear-gradient(145deg,#078ee8,#10305a)}
+body[data-theme="pink"] .setting-card h3::before{background:linear-gradient(145deg,#ff16b9,#4a1240)}
+body[data-theme="mint"] .setting-card h3::before{background:linear-gradient(145deg,#00c98d,#104d3b)}
+body[data-theme="orange"] .setting-card h3::before{background:linear-gradient(145deg,#ff8200,#582708)}
+body[data-theme="blue"] #settingsModal .modal-head{background:linear-gradient(#07152bf5,#07152be8)}
+body[data-theme="pink"] #settingsModal .modal-head{background:linear-gradient(#23091ff5,#23091fe8)}
+body[data-theme="mint"] #settingsModal .modal-head{background:linear-gradient(#081e17f5,#081e17e8)}
+body[data-theme="orange"] #settingsModal .modal-head{background:linear-gradient(#251104f5,#251104e8)}
+body[data-theme="blue"] .composer,body[data-theme="blue"] .field{background:#07152b;color:#f2f8ff}
+body[data-theme="pink"] .composer,body[data-theme="pink"] .field{background:#23091f;color:#fff2fb}
+body[data-theme="mint"] .composer,body[data-theme="mint"] .field{background:#081e17;color:#effff8}
+body[data-theme="orange"] .composer,body[data-theme="orange"] .field{background:#251104;color:#fff7ee}
+}
 /* Impostazioni mobile: layout dedicato, senza cambiare la versione desktop. */
 @media(max-width:700px){
 #settingsModal .modal{
@@ -363,18 +382,32 @@ function saveConversations(){
 }
 function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));return true}catch(e){alert("Impossibile salvare le impostazioni in questo browser.");return false}}
 function applyAppearance(){
-  const themes={purple:"#a477ff",blue:"#55a7ff",pink:"#ec72d5",mint:"#55d6b0",orange:"#ffad5c"};
-  // Compatibilità con le vecchie preferenze che salvavano il codice esadecimale.
+  const themes={
+    purple:{accent:"#a477ff",bg:"#090711",panel:"#100d1a",soft:"#211633",border:"#ffffff16",muted:"#9690aa",glow:"#a477ff",filter:"none",meta:"#090711"},
+    blue:{accent:"#00aaff",bg:"#030b1b",panel:"#07152b",soft:"#0c2445",border:"#3baeff38",muted:"#9bbbd9",glow:"#00aaff",filter:"hue-rotate(72deg) saturate(1.35)",meta:"#030b1b"},
+    pink:{accent:"#ff16b9",bg:"#160514",panel:"#23091f",soft:"#3b1035",border:"#ff50d838",muted:"#d5a3c9",glow:"#ff16b9",filter:"hue-rotate(118deg) saturate(1.5)",meta:"#160514"},
+    mint:{accent:"#00e6a0",bg:"#03130f",panel:"#081e17",soft:"#0c3528",border:"#00e6a038",muted:"#91c9b6",glow:"#00e6a0",filter:"hue-rotate(155deg) saturate(1.4)",meta:"#03130f"},
+    orange:{accent:"#ff8200",bg:"#170900",panel:"#251104",soft:"#3d1c06",border:"#ff9a3338",muted:"#d6b08b",glow:"#ff8200",filter:"hue-rotate(205deg) saturate(1.55)",meta:"#170900"}
+  };
   const legacy={"#a477ff":"purple","#55a7ff":"blue","#ec72d5":"pink","#55d6b0":"mint","#ffad5c":"orange"};
   if(legacy[settings.accentColor])settings.accentColor=legacy[settings.accentColor];
   if(!themes[settings.accentColor])settings.accentColor="purple";
-  document.documentElement.style.setProperty("--purple",themes[settings.accentColor]);
+  const t=themes[settings.accentColor],root=document.documentElement;
+  root.style.setProperty("--purple",t.accent);
+  root.style.setProperty("--bg",t.bg);
+  root.style.setProperty("--panel",t.panel);
+  root.style.setProperty("--border",t.border);
+  root.style.setProperty("--muted",t.muted);
   document.body.dataset.theme=settings.accentColor;
   document.body.classList.toggle("no-animations",!settings.animationsEnabled);
   document.body.classList.toggle("large-text",settings.fontSize==="15");
   document.body.classList.toggle("xlarge-text",settings.fontSize==="16");
+  // Il logo mantiene la sua forma, ma l'alone e la tonalità seguono il tema.
+  document.querySelectorAll('.hero-logo,.brand img,.mobile-brand img').forEach(img=>{
+    img.style.filter=(settings.accentColor==="purple"?"":t.filter+" ")+"drop-shadow(0 0 24px "+t.glow+"88)";
+  });
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.content=({purple:"#090711",blue:"#07111e",pink:"#1b0919",mint:"#071813",orange:"#1b1008"})[settings.accentColor];
+  if(meta)meta.content=t.meta;
 }
 function fillSettingsForm(){
   $("accentColor").value=settings.accentColor;
