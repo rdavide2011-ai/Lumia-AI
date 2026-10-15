@@ -3,101 +3,102 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090711">
 <link rel="icon" type="image/png" href="/logo.png">
 <title>Lumia AI</title>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-:root{--bg:#090711;--panel:#100d1a;--border:#ffffff13;--purple:#a477ff;--text:#f5f1ff;--muted:#9690aa}
+:root{--bg:#090711;--panel:#100d1a;--border:#ffffff16;--purple:#a477ff;--text:#f5f1ff;--muted:#9690aa}
 *{box-sizing:border-box}
 body{margin:0;height:100vh;height:100dvh;overflow:hidden;background:radial-gradient(ellipse at 50% -20%,#382064,transparent 55%),var(--bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,textarea,input{font:inherit}button{cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+button,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}
 .app{display:flex;height:100%;width:100%}
 .sidebar{width:270px;flex-shrink:0;display:flex;flex-direction:column;padding:22px 13px 16px;background:#0c0a15f2;border-right:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:11px;margin:0 0 29px;padding:0 7px}
 .brand img{width:43px;height:43px;object-fit:contain}
 .brand-name{font-size:21px;font-weight:750;letter-spacing:-.8px}.brand-name span{color:var(--purple)}
-.new-chat{width:100%;padding:13px;border:1px solid #50386f;border-radius:13px;background:linear-gradient(120deg,#39245c,#211637);color:white;text-align:left}
-.new-chat:hover{border-color:var(--purple)}
+.new-chat,.primary{width:100%;padding:12px;border:1px solid #50386f;border-radius:12px;background:linear-gradient(120deg,#39245c,#211637);color:white;text-align:left}
 .section-label{margin:27px 9px 12px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1.5px}
-.history{flex:1;overflow-y:auto;overflow-x:hidden}
-.history-row{display:flex;align-items:center;gap:2px;margin:3px 0;border-radius:10px}
+.history{flex:1;overflow:auto}
+.history-row{display:flex;align-items:center;margin:3px 0;border-radius:10px}
 .history-row:hover,.history-row.active{background:#a477ff17}
-.history-item{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:11px 8px 11px 12px;border:0;background:transparent;color:#c9c2d9;text-align:left}
-.history-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;flex:1}
-.chat-actions{display:flex;gap:1px;padding-right:5px;opacity:0}
-.history-row:hover .chat-actions,.history-row.active .chat-actions,.history-row:focus-within .chat-actions{opacity:1}
-.chat-action{display:grid;place-items:center;width:28px;height:29px;border:0;border-radius:7px;background:transparent;color:#a99dbb}
-.chat-action:hover{background:#ffffff12;color:white}.chat-action.pinned{color:#c3a4ff}
-.chat-action svg{width:15px;height:15px}
-.pin-indicator{color:#c3a4ff;font-size:13px}
-.history-empty{padding:10px;color:#777086;font-size:12px;line-height:1.6}
+.history-item{flex:1;min-width:0;padding:11px 8px 11px 12px;border:0;background:transparent;color:#d4cde3;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.chat-actions{display:flex;gap:1px;padding-right:4px}
+.chat-action{width:27px;height:29px;border:0;border-radius:7px;background:transparent;color:#b5a8ca}
+.chat-action:hover{background:#ffffff15;color:white}
+.history-empty{padding:10px;color:var(--muted);font-size:12px;line-height:1.6}
 .sidebar-footer{padding:15px 8px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
-.dot{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:var(--purple);box-shadow:0 0 10px var(--purple)}
+.dot{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:var(--purple)}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.topbar{height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding:0 25px;border-bottom:1px solid var(--border);background:#09071155;backdrop-filter:blur(20px)}
-.top-tag{padding:7px 11px;border:1px solid var(--border);border-radius:20px;color:#b7a6d8;font-size:11px}
-.mobile-brand,.mobile-menu,.sidebar-overlay{display:none}
+.topbar{height:65px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:#09071188;backdrop-filter:blur(20px)}
+.top-left{display:flex;align-items:center;gap:10px}.top-tag{padding:7px 11px;border:1px solid var(--border);border-radius:20px;color:#b7a6d8;font-size:11px}
+.icon-btn{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--border);border-radius:11px;background:#ffffff08;color:white}
+.mobile-brand{display:none}
 .chat{flex:1;min-height:0;overflow-y:auto;scroll-behavior:smooth}
 .welcome{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px 45px;text-align:center}
-.hero-logo{width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 0 28px #7d46ff55);animation:float 5s ease-in-out infinite}
-@keyframes float{50%{transform:translateY(-8px)}}
+.hero-logo{width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 0 28px #7d46ff55);animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-7px)}}
 .welcome h1{margin:20px 0 10px;font-size:clamp(32px,5vw,49px);letter-spacing:-2px}
 .gradient{background:linear-gradient(100deg,#d6c0ff,#9c70ff,#64d9ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.welcome p{max-width:440px;margin:0;color:var(--muted);line-height:1.7;font-size:14px}
-.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(560px,100%);margin-top:30px}
-.suggestion{min-height:83px;padding:15px;border:1px solid var(--border);border-radius:14px;background:#ffffff06;color:white;text-align:left;transition:.2s}
-.suggestion:hover{background:#a477ff18;border-color:#7250a9;transform:translateY(-2px)}
+.welcome p{max-width:440px;color:var(--muted);line-height:1.7;font-size:14px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(560px,100%);margin-top:20px}
+.suggestion{min-height:75px;padding:14px;border:1px solid var(--border);border-radius:14px;background:#ffffff06;color:white;text-align:left}
 .suggestion strong{display:block;margin-bottom:7px;font-size:12px}.suggestion small{color:var(--muted);font-size:11px}
 .messages{width:min(800px,100%);margin:0 auto;padding:30px 25px}
-.message{display:flex;gap:13px;margin-bottom:25px;animation:appear .25s ease}
-@keyframes appear{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.message{display:flex;gap:13px;margin-bottom:25px}
 .avatar{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border:1px solid var(--border);border-radius:11px;background:#211633;font-size:12px}
 .message-body{min-width:0;padding-top:3px;line-height:1.75;font-size:14px;overflow-wrap:anywhere}
 .message-name{margin-bottom:5px;font-size:12px;font-weight:700;color:#c7b1ff}
-.message.user .message-name{color:#d7d0e8}
-.message-text{white-space:pre-wrap}.message.error .message-text{color:#ffaaaa}
-.thinking-logo{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 9px #a477ff88);animation:float 1.2s ease-in-out infinite}
-.composer-area{flex-shrink:0;padding:12px 24px 20px;background:linear-gradient(transparent,var(--bg) 25%)}
-.composer{width:min(800px,100%);margin:0 auto;padding:12px 12px 10px 17px;border:1px solid #a477ff45;border-radius:19px;background:#161222f2}
-.composer:focus-within{border-color:#a477ffb0}
+.message-text{white-space:pre-wrap}.error .message-text{color:#ffaaaa}
+.composer-area{flex-shrink:0;padding:12px 24px max(16px,env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 25%)}
+.composer{width:min(800px,100%);margin:0 auto;padding:12px;border:1px solid #a477ff45;border-radius:19px;background:#161222f2}
 textarea{display:block;width:100%;max-height:150px;min-height:35px;resize:none;border:0;outline:none;background:transparent;color:white;line-height:1.6;font-size:14px}
 textarea::placeholder{color:#777086}
 .composer-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:10px}
 .composer-hint{color:#777086;font-size:10px}
-.send{display:grid;place-items:center;width:37px;height:37px;flex-shrink:0;border:0;border-radius:12px;background:linear-gradient(135deg,#b18aff,#8051e8);color:white;font-size:19px}
-.send:disabled{opacity:.5;cursor:wait}
+.send{width:37px;height:37px;border:0;border-radius:12px;background:linear-gradient(135deg,#b18aff,#8051e8);color:white;font-size:19px}
 .disclaimer{margin-top:10px;color:#716b80;font-size:10px;text-align:center}
-.modal-backdrop{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:#000a;backdrop-filter:blur(7px)}
-.modal-backdrop[hidden]{display:none}
-.rename-modal{width:min(400px,100%);padding:22px;border:1px solid #49365f;border-radius:18px;background:#151020}
-.rename-modal h2{margin:0 0 8px;font-size:19px}.rename-modal p{margin:0 0 17px;color:var(--muted);font-size:13px}
-.rename-input{width:100%;padding:12px;border:1px solid #594271;border-radius:10px;background:#0d0a16;color:white}
-.modal-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
-.modal-button{padding:10px 14px;border:1px solid var(--border);border-radius:9px;background:#211a2e;color:white}
-.modal-button.primary{border-color:transparent;background:#8051e8}
-@media(hover:none){.chat-actions{opacity:1}.chat-action{width:30px}}
+.overlay{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:16px;background:#000b;backdrop-filter:blur(9px)}
+.overlay[hidden]{display:none}
+.modal{width:min(540px,100%);max-height:90vh;max-height:90dvh;overflow:auto;padding:23px;border:1px solid #49365f;border-radius:20px;background:#151020;box-shadow:0 25px 90px #0008}
+.modal h2{margin:0 0 7px;font-size:23px}.muted{color:var(--muted);font-size:13px;line-height:1.65}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.close{width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:#ffffff08;color:white}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.setting-card{padding:16px;border:1px solid var(--border);border-radius:14px;background:#ffffff04}
+.setting-card h3{margin:0 0 7px;font-size:14px}.setting-card p{margin:0 0 14px}
+.action{width:100%;padding:11px;border:1px solid #5a4279;border-radius:10px;background:#291b3d;color:white;font-size:12px}
+.action.secondary{border-color:var(--border);background:#ffffff06}
+.panel{padding:16px;border:1px solid var(--border);border-radius:14px;margin-top:14px}
+.panel h3{margin:0 0 7px;font-size:15px}
+.field{width:100%;padding:12px;border:1px solid #594271;border-radius:10px;background:#0d0a16;color:white}
+.stack{display:grid;gap:10px}
+.status{padding:11px;border-radius:10px;background:#ffffff08;color:#c8b5e8;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+#qr{display:flex;justify-content:center;align-items:center;min-height:200px;padding:14px;margin:12px auto;background:white;border-radius:12px;width:max-content;max-width:100%}
+#qr img,#qr canvas{max-width:100%;height:auto}
+.code-display{font-size:30px;letter-spacing:5px;font-weight:800;text-align:center;margin:16px 0}
+.countdown{text-align:center;color:#d3bfff;font-size:12px}
+video{display:block;width:100%;max-height:300px;background:#000;border-radius:12px}
+.list-preview{max-height:180px;overflow:auto;padding-left:20px;font-size:12px;line-height:1.8}
+.check-row{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.6}
 @media(max-width:700px){
-.sidebar{position:fixed;z-index:30;inset:0 auto 0 0;width:min(290px,85vw);height:100%;height:100dvh;transform:translateX(-105%);transition:transform .25s;box-shadow:15px 0 45px #0006}
+.sidebar{position:fixed;z-index:40;inset:0 auto 0 0;width:min(290px,85vw);height:100dvh;transform:translateX(-105%);transition:transform .25s;box-shadow:15px 0 45px #0006}
 .sidebar.open{transform:translateX(0)}
-.sidebar-overlay{display:block;position:fixed;z-index:20;inset:0;border:0;background:#0009;opacity:0;visibility:hidden;transition:.25s}
-.sidebar-overlay.visible{opacity:1;visibility:visible}
-.topbar{height:65px;justify-content:flex-start;gap:12px;padding:0 14px}
-.mobile-menu{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border:1px solid var(--border);border-radius:11px;background:#ffffff09;color:white;font-size:23px}
-.mobile-brand{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:750}
-.mobile-brand img{width:34px;height:34px;object-fit:contain}.top-tag{display:none}
-.welcome{padding:25px 18px}.hero-logo{width:88px;height:88px}.welcome h1{letter-spacing:-1px}
-.suggestions{grid-template-columns:1fr;margin-top:23px}.suggestion{min-height:68px}
-.messages{padding:22px 16px}.composer-area{padding:10px 12px max(14px,env(safe-area-inset-bottom))}
-.composer-hint{font-size:9px}
+#sidebarShade{position:fixed;z-index:30;inset:0;background:#0009;border:0}
+#sidebarShade[hidden]{display:none}
+.topbar{padding:0 12px}.mobile-brand{display:flex;align-items:center;gap:8px;font-weight:750}.mobile-brand img{width:33px;height:33px}
+.top-tag{display:none}.welcome{padding:22px 16px}.hero-logo{width:80px;height:80px}
+.suggestions{grid-template-columns:1fr}.suggestion{min-height:64px}
+.messages{padding:22px 15px}.composer-area{padding:10px 12px max(14px,env(safe-area-inset-bottom))}
+.composer-hint{font-size:9px}.settings-grid{grid-template-columns:1fr}
+.modal{padding:18px}
 }
 </style>
 </head>
-
 <body>
+<button id="sidebarShade" hidden aria-label="Chiudi cronologia"></button>
 <div class="app">
-<button class="sidebar-overlay" id="sidebarOverlay" aria-label="Chiudi cronologia" hidden></button>
 <aside class="sidebar" id="sidebar">
   <div class="brand"><img src="/logo.png" alt="Lumia AI"><div class="brand-name">Lumia <span>AI</span></div></div>
   <button class="new-chat" id="newChat">＋ &nbsp; Nuova conversazione</button>
@@ -105,17 +106,17 @@ textarea::placeholder{color:#777086}
   <div class="history" id="history"></div>
   <div class="sidebar-footer"><span class="dot"></span>AI online</div>
 </aside>
-
 <main class="main">
 <header class="topbar">
-  <button class="mobile-menu" id="mobileMenu" aria-label="Apri cronologia" aria-expanded="false">☰</button>
-  <div class="mobile-brand"><img src="/logo.png" alt=""><span>Lumia AI</span></div>
-  <div class="top-tag">✦ &nbsp; AI ONLINE</div>
+  <div class="top-left">
+    <button class="icon-btn" id="menuBtn" aria-label="Apri cronologia">☰</button>
+    <div class="mobile-brand"><img src="/logo.png" alt="">Lumia AI</div>
+  </div>
+  <div class="top-left"><div class="top-tag">✦ &nbsp; AI ONLINE</div><button class="icon-btn" id="settingsBtn" title="Impostazioni" aria-label="Impostazioni">⚙</button></div>
 </header>
-
 <section class="chat" id="chat">
   <div class="welcome" id="welcome">
-    <img class="hero-logo" src="/logo.png" alt="Logo Lumia AI">
+    <img class="hero-logo" src="/logo.png" alt="Lumia AI">
     <h1>Benvenuto in <span class="gradient">Lumia.</span></h1>
     <p>Uno spazio per le tue idee, le tue domande e i tuoi progetti. Da dove vuoi iniziare?</p>
     <div class="suggestions">
@@ -127,561 +128,268 @@ textarea::placeholder{color:#777086}
   </div>
   <div class="messages" id="messages" hidden></div>
 </section>
-
 <footer class="composer-area">
   <form class="composer" id="composer">
     <textarea id="prompt" rows="1" placeholder="Scrivi un messaggio a Lumia..." aria-label="Messaggio"></textarea>
-    <div class="composer-bottom"><span class="composer-hint">INVIO per inviare · SHIFT + INVIO per andare a capo</span><button class="send" id="send" type="submit" aria-label="Invia messaggio">↑</button></div>
+    <div class="composer-bottom"><span class="composer-hint">INVIO per inviare · SHIFT + INVIO per andare a capo</span><button class="send" id="send" type="submit">↑</button></div>
   </form>
-  <div class="disclaimer" id="disclaimer">Lumia AI · Le conversazioni sono salvate su questo browser.</div>
+  <div class="disclaimer" id="disclaimer">Le chat sono salvate su questo browser.</div>
 </footer>
 </main>
 </div>
 
-<div class="modal-backdrop" id="renameModal" hidden>
-<form class="rename-modal" id="renameForm">
-  <h2>Rinomina conversazione</h2><p>Scegli un nome facile da riconoscere.</p>
-  <input class="rename-input" id="renameInput" maxlength="80" placeholder="Nome della conversazione" required>
-  <div class="modal-buttons"><button class="modal-button" id="cancelRename" type="button">Annulla</button><button class="modal-button primary" type="submit">Salva nome</button></div>
-</form>
+<div class="overlay" id="settingsModal" hidden>
+<div class="modal">
+  <div class="modal-head"><div><h2>Impostazioni</h2><div class="muted">Gestisci Lumia AI e i tuoi dispositivi.</div></div><button class="close" data-close="settingsModal">✕</button></div>
+  <div class="settings-grid">
+    <div class="setting-card"><h3>📱 Dispositivi</h3><p class="muted">Trasferisci le tue conversazioni su un altro dispositivo.</p><button class="action" id="openDevices">Gestisci dispositivi</button></div>
+    <div class="setting-card"><h3>🔐 Privacy</h3><p class="muted">Le conversazioni rimangono nel browser, finché non scegli di trasferirle.</p><button class="action secondary" id="privacyInfo">Informazioni privacy</button></div>
+  </div>
+  <div class="panel" id="privacyPanel" hidden><p class="muted">Il trasferimento richiede il server Lumia per consegnare temporaneamente i dati al secondo dispositivo. Il codice è monouso e scade dopo 10 minuti. Durante il trasferimento le chat transitano dal server: non è un collegamento diretto dispositivo-dispositivo.</p></div>
+</div>
+</div>
+
+<div class="overlay" id="devicesModal" hidden>
+<div class="modal">
+  <div class="modal-head"><div><h2>Dispositivi</h2><div class="muted">Condividi una copia delle tue chat senza attivare la sincronizzazione.</div></div><button class="close" data-close="devicesModal">✕</button></div>
+  <div class="settings-grid">
+    <div class="setting-card"><h3>↗ Invia chat</h3><p class="muted">Crea un QR Code e un codice temporaneo per trasferire la cronologia.</p><button class="action" id="createTransfer">Genera codice di trasferimento</button></div>
+    <div class="setting-card"><h3>↙ Ricevi chat</h3><p class="muted">Scansiona il QR Code oppure inserisci il codice ricevuto.</p><button class="action" id="openReceive">Ricevi da un dispositivo</button></div>
+  </div>
+  <div class="panel" id="sendPanel" hidden>
+    <h3>Condividi questo trasferimento</h3>
+    <p class="muted">Mostra il QR Code all'altro dispositivo oppure comunicagli il codice. Chi possiede il codice può importare una copia delle chat.</p>
+    <div id="qr"></div>
+    <div class="code-display" id="transferCode">--------</div>
+    <div class="countdown" id="transferCountdown">Scadenza tra 10 minuti</div>
+    <div class="stack" style="margin-top:13px"><button class="action secondary" id="copyCode">Copia codice</button><button class="action secondary" id="cancelTransfer">Annulla trasferimento</button></div>
+  </div>
+  <div class="panel" id="receivePanel" hidden>
+    <h3>Ricevi conversazioni</h3>
+    <p class="muted">Inserisci il codice monouso oppure usa la fotocamera per leggere il QR Code dell'altro dispositivo.</p>
+    <div class="stack">
+      <input class="field" id="receiveCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Codice di 8 cifre">
+      <button class="action" id="redeemCode">Verifica e importa</button>
+      <button class="action secondary" id="scanQr">Scansiona QR Code con la fotocamera</button>
+      <video id="scannerVideo" playsinline hidden></video>
+      <button class="action secondary" id="stopScan" hidden>Ferma fotocamera</button>
+      <div class="status" id="receiveStatus" role="status">Le chat esistenti non verranno cancellate.</div>
+    </div>
+    <div id="importPreview" hidden>
+      <h3 style="margin-top:16px">Anteprima</h3>
+      <ul class="list-preview" id="previewList"></ul>
+      <label class="check-row"><input type="checkbox" id="replaceExisting"> Sostituisci la cronologia locale con quella ricevuta. Questa operazione non si può annullare.</label>
+      <button class="action" style="margin-top:12px" id="confirmImport">Importa conversazioni</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <script>
 "use strict";
+const $=id=>document.getElementById(id);
+const STORAGE_KEY="lumia_ai_conversations_v1";
+let conversations=loadConversations(),currentId=null,busy=false;
+let outgoingToken=null,outgoingCode=null,expiryTimer=null,expiryAt=0;
+let pendingImport=null,scannerStream=null,scannerTimer=null,scannerActive=false;
 
-const $ = id => document.getElementById(id);
-const STORAGE_KEY = "lumia_ai_conversations_v1";
-
-const chat = $("chat");
-const welcome = $("welcome");
-const messagesBox = $("messages");
-const promptBox = $("prompt");
-const historyBox = $("history");
-const sendButton = $("send");
-const sidebar = $("sidebar");
-const mobileMenu = $("mobileMenu");
-const sidebarOverlay = $("sidebarOverlay");
-const renameModal = $("renameModal");
-const renameInput = $("renameInput");
-
-let conversations = loadConversations();
-let currentId = null;
-let busy = false;
-let renamingId = null;
-
-function loadConversations() {
-  try {
-    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    if (!Array.isArray(value)) return [];
-    return value.filter(c => c && typeof c === "object").map(c => ({
-      ...c,
-      id: c.id || makeId(),
-      title: c.title || "Nuova conversazione",
-      pinned: Boolean(c.pinned),
-      manualTitle: Boolean(c.manualTitle),
-      messages: Array.isArray(c.messages) ? c.messages : []
-    })).filter(c => c.messages.length > 0);
-  } catch (error) {
-    console.error("Impossibile leggere la cronologia:", error);
-    return [];
-  }
+function id(){return crypto.randomUUID?crypto.randomUUID():"chat-"+Date.now()+"-"+Math.random().toString(36).slice(2)}
+function loadConversations(){
+  try{
+    const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+    if(!Array.isArray(data))return [];
+    return data.filter(c=>c&&typeof c==="object"&&Array.isArray(c.messages)&&c.messages.length)
+      .map(c=>({...c,id:c.id||id(),title:c.title||"Conversazione",pinned:!!c.pinned,manualTitle:!!c.manualTitle}));
+  }catch(e){console.error(e);return []}
 }
-
-function makeId() {
-  return crypto.randomUUID ? crypto.randomUUID() :
-    "chat-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-}
-
-function saveConversations() {
-  try {
-    // Non salvare mai conversazioni vuote.
-    conversations = conversations.filter(c => c.messages && c.messages.length > 0);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-    $("disclaimer").textContent = "Lumia AI · Le conversazioni sono salvate su questo browser.";
+function saveConversations(){
+  try{
+    conversations=conversations.filter(c=>Array.isArray(c.messages)&&c.messages.length);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(conversations));
+    $("disclaimer").textContent="Le chat sono salvate su questo browser.";
     return true;
-  } catch (error) {
-    console.error("Errore salvataggio cronologia:", error);
-    $("disclaimer").textContent = "Attenzione: il browser non è riuscito a salvare le chat.";
-    return false;
+  }catch(e){$("disclaimer").textContent="Errore: impossibile salvare le chat nel browser.";return false}
+}
+function current(){return conversations.find(c=>c.id===currentId)}
+function showWelcome(){ $("welcome").hidden=false;$("messages").hidden=true;$("messages").replaceChildren() }
+function renderHistory(){
+  const box=$("history");box.replaceChildren();
+  const ordered=[...conversations].sort((a,b)=>Number(b.pinned)-Number(a.pinned));
+  if(!ordered.length){const e=document.createElement("div");e.className="history-empty";e.textContent="Le conversazioni appariranno qui dopo il primo messaggio.";box.append(e);return}
+  for(const c of ordered){
+    const row=document.createElement("div");row.className="history-row"+(c.id===currentId?" active":"");
+    const open=document.createElement("button");open.className="history-item";open.textContent=(c.pinned?"⌖ ":"")+c.title;open.title=c.title;
+    open.onclick=()=>{if(busy)return;currentId=c.id;renderHistory();renderMessages();closeSidebar()};
+    const actions=document.createElement("div");actions.className="chat-actions";
+    const rename=document.createElement("button");rename.className="chat-action";rename.textContent="✎";rename.title="Rinomina";
+    rename.onclick=()=>{const v=prompt("Nome della conversazione",c.title);if(v&&v.trim()){c.title=v.trim().slice(0,80);c.manualTitle=true;saveConversations();renderHistory()}};
+    const pin=document.createElement("button");pin.className="chat-action";pin.textContent=c.pinned?"⌖":"◇";pin.title="Fissa/sblocca";
+    pin.onclick=()=>{c.pinned=!c.pinned;saveConversations();renderHistory()};
+    const del=document.createElement("button");del.className="chat-action";del.textContent="×";del.title="Elimina";
+    del.onclick=()=>{if(!confirm("Eliminare questa conversazione?"))return;conversations=conversations.filter(x=>x.id!==c.id);if(currentId===c.id){currentId=null;showWelcome()}saveConversations();renderHistory()};
+    actions.append(rename,pin,del);row.append(open,actions);box.append(row);
   }
 }
-
-function currentConversation() {
-  return conversations.find(c => c.id === currentId);
-}
-
-function sortedConversations() {
-  return [...conversations].sort((a, b) => {
-    if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
-    return conversations.indexOf(a) - conversations.indexOf(b);
+function renderMessages(){
+  const c=current();if(!c||!c.messages.length){showWelcome();return}
+  $("welcome").hidden=true;$("messages").hidden=false;$("messages").replaceChildren();
+  c.messages.forEach(m=>{
+    const row=document.createElement("div");row.className="message "+m.role+(m.error?" error":"");
+    const av=document.createElement("div");av.className="avatar";av.textContent=m.role==="user"?"Tu":"✦";
+    const body=document.createElement("div");body.className="message-body";
+    const name=document.createElement("div");name.className="message-name";name.textContent=m.role==="user"?"Tu":"Lumia AI";
+    const text=document.createElement("div");text.className="message-text";text.textContent=m.content;
+    body.append(name,text);row.append(av,body);$("messages").append(row);
   });
+  $("chat").scrollTop=$("chat").scrollHeight;
 }
-
-function closeSidebar() {
-  sidebar.classList.remove("open");
-  sidebarOverlay.classList.remove("visible");
-  mobileMenu.setAttribute("aria-expanded", "false");
-  setTimeout(() => {
-    if (!sidebarOverlay.classList.contains("visible")) sidebarOverlay.hidden = true;
-  }, 250);
+function newConversation(){if(busy)return;currentId=null;renderHistory();showWelcome();$("prompt").value="";closeSidebar();$("prompt").focus()}
+function addMessage(role,content,extra={}){
+  const c=current();if(!c)return;
+  c.messages.push({role,content,...extra});
+  if(role==="user"&&!c.manualTitle&&c.title==="Nuova conversazione")c.title=content.slice(0,32)+(content.length>32?"…":"");
+  saveConversations();renderHistory();renderMessages();
 }
-
-function openSidebar() {
-  sidebar.classList.add("open");
-  sidebarOverlay.hidden = false;
-  requestAnimationFrame(() => sidebarOverlay.classList.add("visible"));
-  mobileMenu.setAttribute("aria-expanded", "true");
+async function sendMessage(raw){
+  const content=raw.trim();if(!content||busy)return;
+  if(!currentId||!current()){currentId=id();conversations.unshift({id:currentId,title:"Nuova conversazione",messages:[],pinned:false,manualTitle:false})}
+  const c=current();busy=true;$("send").disabled=true;$("prompt").disabled=true;$("newChat").disabled=true;
+  addMessage("user",content);$("prompt").value="";$("prompt").style.height="auto";
+  const typing=document.createElement("div");typing.className="message";typing.id="typing";
+  typing.innerHTML='<div class="avatar">✦</div><div class="message-body"><div class="message-name">Lumia AI</div><div class="message-text">Lumia sta pensando…</div></div>';$("messages").append(typing);
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content}))})});
+    if(!r.ok){let t=await r.text();try{t=JSON.parse(t).error||t}catch{}throw Error(t||"Servizio AI non disponibile")}
+    let answer="";
+    if((r.headers.get("content-type")||"").includes("application/json")){const d=await r.json();answer=d.reply||d.response||d.message||""}
+    else if(r.body){const reader=r.body.getReader(),decoder=new TextDecoder();while(true){const x=await reader.read();if(x.done)break;answer+=decoder.decode(x.value,{stream:true})}answer+=decoder.decode()}
+    else answer=await r.text();
+    if(!answer.trim())throw Error("L'AI ha restituito una risposta vuota.");
+    addMessage("assistant",answer);
+    if(!c.manualTitle)updateTitle(c.id);
+  }catch(e){addMessage("assistant","Non riesco a completare la risposta.\n"+e.message,{error:true})}
+  finally{$("typing")?.remove();busy=false;$("send").disabled=false;$("prompt").disabled=false;$("newChat").disabled=false;$("prompt").focus()}
 }
-
-function toggleSidebar() {
-  sidebar.classList.contains("open") ? closeSidebar() : openSidebar();
+async function updateTitle(cid){
+  const c=conversations.find(x=>x.id===cid);if(!c||c.manualTitle)return;
+  try{const r=await fetch("/api/title",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.map(m=>({role:m.role,content:m.content}))})});if(!r.ok)return;const d=await r.json();if(d.title&&!c.manualTitle){c.title=String(d.title).slice(0,80);saveConversations();renderHistory()}}catch(e){console.debug(e)}
 }
+$("composer").addEventListener("submit",e=>{e.preventDefault();sendMessage($("prompt").value)});
+$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("composer").requestSubmit()}});
+$("prompt").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,150)+"px"});
+$("newChat").onclick=newConversation;
+document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>sendMessage(b.dataset.prompt));
 
-function newConversation() {
-  if (busy) return;
+function openModal(name){$(name).hidden=false}
+function closeModal(name){$(name).hidden=true}
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+$("settingsBtn").onclick=()=>openModal("settingsModal");
+$("openDevices").onclick=()=>{closeModal("settingsModal");openModal("devicesModal")};
+$("privacyInfo").onclick=()=>{$("privacyPanel").hidden=!$("privacyPanel").hidden};
+$("openReceive").onclick=()=>{$("receivePanel").hidden=false;$("sendPanel").hidden=true;$("receiveStatus").textContent="Inserisci il codice di 8 cifre oppure scansiona il QR Code."};
+$("createTransfer").onclick=createTransfer;
+$("cancelTransfer").onclick=cancelTransfer;
+$("copyCode").onclick=async()=>{try{await navigator.clipboard.writeText(outgoingCode);$("transferCountdown").textContent="Codice copiato. Scade dopo 10 minuti."}catch{$("transferCountdown").textContent="Codice: "+outgoingCode}};
+$("redeemCode").onclick=()=>redeem({code:$("receiveCode").value.trim()});
+$("receiveCode").addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,"").slice(0,8));
+$("confirmImport").onclick=confirmImport;
+$("scanQr").onclick=startScanner;
+$("stopScan").onclick=stopScanner;
 
-  // La nuova chat esiste solo in memoria finché non viene inviato un messaggio.
-  currentId = null;
-  renderHistory();
-  showWelcome();
-  promptBox.value = "";
-  promptBox.style.height = "auto";
-  closeSidebar();
-  promptBox.focus();
+async function createTransfer(){
+  if(!conversations.length){alert("Non ci sono conversazioni da condividere.");return}
+  if(typeof QRCode==="undefined"){alert("La libreria QR non è disponibile. Ricarica la pagina o usa il codice manuale.");return}
+  $("createTransfer").disabled=true;
+  try{
+    const r=await fetch("/api/device-transfer/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({conversations})});
+    const d=await r.json();if(!r.ok)throw Error(d.error||"Impossibile creare il trasferimento.");
+    outgoingToken=d.token;outgoingCode=d.code;expiryAt=d.expiresAt;
+    $("qr").replaceChildren();
+    new QRCode($("qr"),{text:JSON.stringify({type:"lumia-transfer",token:outgoingToken}),width:210,height:210,colorDark:"#160d24",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+    $("transferCode").textContent=outgoingCode;
+    $("sendPanel").hidden=false;$("receivePanel").hidden=true;
+    if(expiryTimer)clearInterval(expiryTimer);
+    expiryTimer=setInterval(()=>{
+      const left=Math.max(0,Math.ceil((expiryAt-Date.now())/1000));
+      $("transferCountdown").textContent=left?`Il codice scade tra ${Math.floor(left/60)}:${String(left%60).padStart(2,"0")}`:"Codice scaduto. Generane uno nuovo.";
+      if(!left){clearInterval(expiryTimer);outgoingToken=null;outgoingCode=null}
+    },500);
+  }catch(e){alert(e.message)}
+  finally{$("createTransfer").disabled=false}
 }
-
-function deleteConversation(id) {
-  if (busy) return;
-  conversations = conversations.filter(c => c.id !== id);
-
-  if (currentId === id) currentId = null;
-
-  saveConversations();
-  renderHistory();
-
-  if (currentId) renderMessages();
-  else showWelcome();
+async function cancelTransfer(){
+  if(expiryTimer)clearInterval(expiryTimer);expiryTimer=null;outgoingToken=null;outgoingCode=null;
+  $("sendPanel").hidden=true;$("qr").replaceChildren();$("transferCode").textContent="--------";
 }
-
-function togglePin(id) {
-  if (busy) return;
-  const conversation = conversations.find(c => c.id === id);
-  if (!conversation) return;
-  conversation.pinned = !conversation.pinned;
-  saveConversations();
-  renderHistory();
+async function redeem(payload){
+  $("redeemCode").disabled=true;$("receiveStatus").textContent="Verifica del codice in corso…";
+  try{
+    const r=await fetch("/api/device-transfer/redeem",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const d=await r.json();if(!r.ok)throw Error(d.error||"Codice non valido.");
+    if(!Array.isArray(d.conversations))throw Error("Il trasferimento non contiene una cronologia valida.");
+    pendingImport=d.conversations;
+    $("previewList").replaceChildren();
+    pendingImport.forEach(c=>{const li=document.createElement("li");li.textContent=(c.title||"Conversazione")+" — "+c.messages.length+" messaggi";$("previewList").append(li)});
+    $("importPreview").hidden=false;$("receiveStatus").textContent=`Trasferimento verificato: ${pendingImport.length} conversazioni. Conferma per importarle.`;
+  }catch(e){$("receiveStatus").textContent=e.message}
+  finally{$("redeemCode").disabled=false}
 }
-
-function openRename(id) {
-  if (busy) return;
-  const conversation = conversations.find(c => c.id === id);
-  if (!conversation) return;
-
-  renamingId = id;
-  renameInput.value = conversation.title;
-  renameModal.hidden = false;
-  requestAnimationFrame(() => {
-    renameInput.focus();
-    renameInput.select();
-  });
+async function startScanner(){
+  if(!("BarcodeDetector" in window)){ $("receiveStatus").textContent="Questo browser non supporta la scansione QR nativa. Usa il codice di 8 cifre.";return}
+  if(!navigator.mediaDevices?.getUserMedia){$("receiveStatus").textContent="La fotocamera richiede HTTPS e i permessi del browser. Usa il codice manuale.";return}
+  try{
+    scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+    const video=$("scannerVideo");video.srcObject=scannerStream;video.hidden=false;await video.play();
+    $("stopScan").hidden=false;$("scanQr").disabled=true;scannerActive=true;
+    const detector=new BarcodeDetector({formats:["qr_code"]});
+    const scan=async()=>{
+      if(!scannerActive)return;
+      try{
+        const codes=await detector.detect(video);
+        if(codes.length){
+          const raw=codes[0].rawValue;let data;
+          try{data=JSON.parse(raw)}catch{data={token:raw}}
+          if(data.type==="lumia-transfer"&&data.token)await redeem({token:data.token});
+          else if(data.token)await redeem({token:data.token});
+          else $("receiveStatus").textContent="QR Code non riconosciuto.";
+          stopScanner();return;
+        }
+      }catch(e){console.debug(e)}
+      if(scannerActive)scannerTimer=setTimeout(scan,350);
+    };
+    scan();
+  }catch(e){$("receiveStatus").textContent="Non riesco ad aprire la fotocamera. Controlla i permessi o usa il codice manuale."}
 }
-
-function closeRename() {
-  renameModal.hidden = true;
-  renamingId = null;
+function stopScanner(){
+  scannerActive=false;if(scannerTimer)clearTimeout(scannerTimer);scannerTimer=null;
+  if(scannerStream)scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;
+  $("scannerVideo").pause();$("scannerVideo").srcObject=null;$("scannerVideo").hidden=true;
+  $("stopScan").hidden=true;$("scanQr").disabled=false;
 }
-
-$("renameForm").addEventListener("submit", event => {
-  event.preventDefault();
-  if (!renamingId) return;
-
-  const conversation = conversations.find(c => c.id === renamingId);
-  const title = renameInput.value.trim();
-  if (!conversation || !title) return;
-
-  conversation.title = title;
-  conversation.manualTitle = true;
-  saveConversations();
-  renderHistory();
-  closeRename();
-});
-
-$("cancelRename").addEventListener("click", closeRename);
-renameModal.addEventListener("click", event => {
-  if (event.target === renameModal) closeRename();
-});
-document.addEventListener("keydown", event => {
-  if (event.key === "Escape") {
-    closeSidebar();
-    closeRename();
+function confirmImport(){
+  if(!Array.isArray(pendingImport))return;
+  const replace=$("replaceExisting").checked;
+  const imported=pendingImport.map(c=>({...c,id:id(),pinned:false,manualTitle:!!c.manualTitle,messages:c.messages.map(m=>({role:m.role,content:m.content,...(m.error?{error:true}:{})}))}));
+  if(replace){
+    if(!confirm("Confermi di sostituire tutte le chat locali con quelle ricevute?"))return;
+    conversations=imported;
+  }else{
+    const existing=new Set(conversations.map(c=>JSON.stringify([c.title,c.messages])));
+    const unique=imported.filter(c=>!existing.has(JSON.stringify([c.title,c.messages])));
+    conversations=[...unique,...conversations];
   }
-});
-
-function createIcon(markup) {
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("stroke-width", "1.8");
-  svg.setAttribute("stroke-linecap", "round");
-  svg.setAttribute("stroke-linejoin", "round");
-  svg.innerHTML = markup;
-  return svg;
+  if(!saveConversations()){alert("Impossibile salvare le chat importate: lo spazio del browser potrebbe essere esaurito.");return}
+  currentId=null;renderHistory();showWelcome();pendingImport=null;
+  $("importPreview").hidden=true;$("receiveCode").value="";$("replaceExisting").checked=false;
+  $("receiveStatus").textContent=`Importazione completata. Ora hai ${conversations.length} conversazioni su questo dispositivo.`;
 }
-
-function renderHistory() {
-  historyBox.replaceChildren();
-  const ordered = sortedConversations();
-
-  if (!ordered.length) {
-    const empty = document.createElement("div");
-    empty.className = "history-empty";
-    empty.textContent = "Le tue conversazioni appariranno qui dopo il primo messaggio.";
-    historyBox.appendChild(empty);
-    return;
-  }
-
-  ordered.forEach(conversation => {
-    const row = document.createElement("div");
-    row.className = "history-row" + (conversation.id === currentId ? " active" : "");
-
-    const select = document.createElement("button");
-    select.className = "history-item";
-    select.type = "button";
-    select.title = conversation.title;
-
-    if (conversation.pinned) {
-      const pinMark = document.createElement("span");
-      pinMark.className = "pin-indicator";
-      pinMark.textContent = "⌖";
-      select.appendChild(pinMark);
-    }
-
-    const title = document.createElement("span");
-    title.className = "history-title";
-    title.textContent = conversation.title;
-    select.appendChild(title);
-
-    select.addEventListener("click", () => {
-      if (busy) return;
-      currentId = conversation.id;
-      renderHistory();
-      renderMessages();
-      closeSidebar();
-    });
-
-    const actions = document.createElement("div");
-    actions.className = "chat-actions";
-
-    const rename = document.createElement("button");
-    rename.type = "button";
-    rename.className = "chat-action";
-    rename.title = "Rinomina chat";
-    rename.setAttribute("aria-label", "Rinomina " + conversation.title);
-    rename.appendChild(createIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/>'));
-    rename.addEventListener("click", event => {
-      event.stopPropagation();
-      openRename(conversation.id);
-    });
-
-    const pin = document.createElement("button");
-    pin.type = "button";
-    pin.className = "chat-action" + (conversation.pinned ? " pinned" : "");
-    pin.title = conversation.pinned ? "Rimuovi dai fissati" : "Fissa in alto";
-    pin.setAttribute("aria-label", pin.title);
-    pin.appendChild(createIcon('<path d="m16 3 5 5-4 1-4 4-1 5-2-2-2 5-2-2 5-2-2-2 5-1 4-4 1Z"/>'));
-    pin.addEventListener("click", event => {
-      event.stopPropagation();
-      togglePin(conversation.id);
-    });
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "chat-action";
-    remove.title = "Elimina chat";
-    remove.setAttribute("aria-label", "Elimina " + conversation.title);
-    remove.textContent = "×";
-    remove.addEventListener("click", event => {
-      event.stopPropagation();
-      deleteConversation(conversation.id);
-    });
-
-    actions.append(rename, pin, remove);
-    row.append(select, actions);
-    historyBox.appendChild(row);
-  });
-}
-
-function showWelcome() {
-  welcome.hidden = false;
-  messagesBox.hidden = true;
-  messagesBox.replaceChildren();
-}
-
-function renderMessages() {
-  const conversation = currentConversation();
-
-  if (!conversation || !conversation.messages.length) {
-    showWelcome();
-    return;
-  }
-
-  welcome.hidden = true;
-  messagesBox.hidden = false;
-  messagesBox.replaceChildren();
-
-  conversation.messages.forEach(message => {
-    const row = document.createElement("div");
-    row.className = "message " + message.role + (message.error ? " error" : "");
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-
-    if (message.role === "user") {
-      avatar.textContent = "Tu";
-    } else {
-      const logo = document.createElement("img");
-      logo.src = "/logo.png";
-      logo.alt = "Lumia AI";
-      logo.className = "thinking-logo";
-      logo.style.animation = "none";
-      avatar.appendChild(logo);
-    }
-
-    const body = document.createElement("div");
-    body.className = "message-body";
-
-    const name = document.createElement("div");
-    name.className = "message-name";
-    name.textContent = message.role === "user" ? "Tu" : "Lumia AI";
-
-    const text = document.createElement("div");
-    text.className = "message-text";
-    text.textContent = message.content;
-
-    body.append(name, text);
-    row.append(avatar, body);
-    messagesBox.appendChild(row);
-  });
-
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function addMessage(role, content, options = {}) {
-  const conversation = currentConversation();
-  if (!conversation) return;
-
-  conversation.messages.push({
-    role,
-    content,
-    ...(options.error ? { error: true } : {})
-  });
-
-  if (role === "user" && !conversation.manualTitle &&
-      conversation.title === "Nuova conversazione") {
-    conversation.title = content.slice(0, 32) + (content.length > 32 ? "…" : "");
-  }
-
-  saveConversations();
-  renderHistory();
-  renderMessages();
-}
-
-function showTyping() {
-  welcome.hidden = true;
-  messagesBox.hidden = false;
-
-  const row = document.createElement("div");
-  row.className = "message";
-  row.id = "typingIndicator";
-
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-
-  const logo = document.createElement("img");
-  logo.src = "/logo.png";
-  logo.alt = "Lumia AI";
-  logo.className = "thinking-logo";
-  avatar.appendChild(logo);
-
-  const body = document.createElement("div");
-  body.className = "message-body";
-
-  const name = document.createElement("div");
-  name.className = "message-name";
-  name.textContent = "Lumia AI";
-
-  const text = document.createElement("div");
-  text.className = "message-text";
-  text.textContent = "Lumia sta pensando…";
-
-  body.append(name, text);
-  row.append(avatar, body);
-  messagesBox.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-async function readAIResponse(response) {
-  const contentType = response.headers.get("content-type") || "";
-
-  // Compatibilità con server che restituiscono JSON.
-  if (contentType.includes("application/json")) {
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Errore del servizio AI.");
-    const reply = data.reply || data.response || data.message;
-    if (typeof reply !== "string" || !reply.trim()) {
-      throw new Error("L'AI non ha restituito una risposta valida.");
-    }
-    return reply;
-  }
-
-  // Compatibilità con server che restituiscono testo in streaming.
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Errore del servizio AI.");
-  }
-
-  if (!response.body) {
-    const text = await response.text();
-    if (!text.trim()) throw new Error("Risposta vuota dal servizio AI.");
-    return text;
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let result = "";
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    result += decoder.decode(value, { stream: true });
-  }
-
-  result += decoder.decode();
-  if (!result.trim()) throw new Error("L'AI non ha restituito una risposta valida.");
-  return result;
-}
-
-async function sendMessage(rawText) {
-  const content = rawText.trim();
-  if (!content || busy) return;
-
-  // Crea una conversazione soltanto quando arriva il primo messaggio.
-  if (!currentId || !currentConversation()) {
-    currentId = makeId();
-    conversations.unshift({
-      id: currentId,
-      title: "Nuova conversazione",
-      messages: [],
-      pinned: false,
-      manualTitle: false
-    });
-  }
-
-  const conversation = currentConversation();
-  if (!conversation) return;
-
-  busy = true;
-  sendButton.disabled = true;
-  promptBox.disabled = true;
-  $("newChat").disabled = true;
-  $("disclaimer").textContent = "Lumia sta pensando…";
-
-  addMessage("user", content);
-  promptBox.value = "";
-  promptBox.style.height = "auto";
-  showTyping();
-
-  try {
-    const apiMessages = conversation.messages
-      .filter(message => !message.error)
-      .map(message => ({ role: message.role, content: message.content }));
-
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: apiMessages })
-    });
-
-    const reply = await readAIResponse(response);
-    addMessage("assistant", reply);
-    $("disclaimer").textContent = "Lumia AI · Le conversazioni sono salvate su questo browser.";
-
-    // Genera un titolo migliore se il server supporta l'endpoint.
-    if (!conversation.manualTitle) updateAutomaticTitle(conversation.id);
-  } catch (error) {
-    console.error("Errore chat:", error);
-    addMessage("assistant", "Non riesco a completare la risposta.\n" + error.message, { error: true });
-    $("disclaimer").textContent = "Connessione AI non riuscita.";
-  } finally {
-    $("typingIndicator")?.remove();
-    busy = false;
-    sendButton.disabled = false;
-    promptBox.disabled = false;
-    $("newChat").disabled = false;
-    promptBox.focus();
-    chat.scrollTop = chat.scrollHeight;
-  }
-}
-
-async function updateAutomaticTitle(id) {
-  const conversation = conversations.find(c => c.id === id);
-  if (!conversation || conversation.manualTitle) return;
-
-  try {
-    const response = await fetch("/api/title", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messages: conversation.messages.map(m => ({ role: m.role, content: m.content }))
-      })
-    });
-
-    if (!response.ok) return;
-    const data = await response.json();
-    const title = typeof data.title === "string" ? data.title.trim() : "";
-
-    if (title && !conversation.manualTitle) {
-      conversation.title = title.slice(0, 80);
-      saveConversations();
-      renderHistory();
-    }
-  } catch (error) {
-    // Il titolo iniziale resta valido anche se il servizio titoli non è disponibile.
-    console.debug("Titolo automatico non disponibile:", error);
-  }
-}
-
-$("composer").addEventListener("submit", event => {
-  event.preventDefault();
-  sendMessage(promptBox.value);
-});
-
-promptBox.addEventListener("keydown", event => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    $("composer").requestSubmit();
-  }
-});
-
-promptBox.addEventListener("input", () => {
-  promptBox.style.height = "auto";
-  promptBox.style.height = Math.min(promptBox.scrollHeight, 150) + "px";
-});
-
-$("newChat").addEventListener("click", newConversation);
-mobileMenu.addEventListener("click", toggleSidebar);
-sidebarOverlay.addEventListener("click", closeSidebar);
-
-document.querySelectorAll("[data-prompt]").forEach(button => {
-  button.addEventListener("click", () => sendMessage(button.dataset.prompt));
-});
-
-// All'avvio: mostra sempre la schermata iniziale e non seleziona/crea una chat.
-currentId = null;
-renderHistory();
-showWelcome();
+function closeSidebar(){$("sidebar").classList.remove("open");$("sidebarShade").hidden=true}
+$("menuBtn").onclick=()=>{$("sidebar").classList.toggle("open");$("sidebarShade").hidden=!$("sidebar").classList.contains("open")};
+$("sidebarShade").onclick=closeSidebar;
+document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o){if(o.id==="devicesModal")stopScanner();o.hidden=true}}));
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".overlay").forEach(o=>o.hidden=true);stopScanner();closeSidebar()}});
+window.addEventListener("beforeunload",stopScanner);
+renderHistory();showWelcome();
 </script>
 </body>
 </html>
