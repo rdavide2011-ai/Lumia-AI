@@ -390,7 +390,7 @@ body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d
     </div>
   </div>
   <div class="panel" id="memoryPanel" hidden>
-    <h3>🧠 Memoria personale</h3><p class="muted">Scrivi informazioni utili che vuoi che Lumia tenga presenti nelle prossime risposte. La memoria è salvata solo in questo browser e viene inviata al server insieme alle richieste AI.</p>
+    <h3>🧠 Memoria personale</h3><p class="muted">Lumia può usare le informazioni qui sotto e brevi estratti delle chat precedenti per ricordare preferenze e progetti. Le chat restano salvate in questo browser; gli estratti pertinenti vengono inviati al server quando chiedi una risposta.</p>
     <div class="settings-form">
       <label for="personalMemory">Informazioni da ricordare</label>
       <textarea class="field" id="personalMemory" rows="4" maxlength="2000" placeholder="Es. Preferisco risposte in italiano, brevi e con passaggi numerati..."></textarea>
@@ -569,6 +569,23 @@ function addMessage(role,content,extra={}){
   if(role==="user"&&!c.manualTitle&&c.title==="Nuova conversazione")c.title=content.slice(0,32)+(content.length>32?"…":"");
   saveConversations();renderHistory();renderMessages();
 }
+function buildConversationMemory(excludeId){
+  const previous=[...conversations]
+    .filter(c=>c.id!==excludeId&&Array.isArray(c.messages)&&c.messages.length)
+    .sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0));
+  const chunks=[];
+  let total=0;
+  for(const conversation of previous){
+    const messages=conversation.messages.filter(m=>!m.error&&["user","assistant"].includes(m.role)&&typeof m.content==="string"&&m.content.trim()).slice(-6);
+    if(!messages.length)continue;
+    const chunk="Chat precedente: "+String(conversation.title||"Conversazione").slice(0,100)+"\n"+
+      messages.map(m=>(m.role==="user"?"Utente":"Lumia")+": "+m.content.slice(0,650)).join("\n");
+    if(total+chunk.length>5000)continue;
+    chunks.push(chunk);total+=chunk.length;
+    if(chunks.length>=5)break;
+  }
+  return chunks.join("\n\n").slice(0,5000);
+}
 async function sendMessage(raw){
   const content=raw.trim();if(!content||busy)return;
   if(!currentId||!current()){currentId=id();conversations.unshift({id:currentId,title:"Nuova conversazione",messages:[],pinned:false,manualTitle:false})}
@@ -578,7 +595,7 @@ async function sendMessage(raw){
   const thinkingLogo=({purple:"/logo.png",blue:"/logo-bluelettronico.png",pink:"/logo-rosaneon.png",mint:"/logo-verdementa.png",orange:"/logo-arancione.png"})[settings.accentColor]||"/logo.png";
   typing.innerHTML='<div class="thinking-avatar"><img class="thinking-logo" alt="Lumia sta pensando" src="'+thinkingLogo+'"></div><div class="message-body"><div class="message-name">Lumia AI</div><div class="message-text">Lumia sta pensando <span class="thinking-dots" aria-hidden="true"><span></span><span></span><span></span></span></div></div>';$("messages").append(typing);
   try{
-    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})),preferences:{responseTone:settings.responseTone,responseLength:settings.responseLength,customInstructions:settings.customInstructions,personalMemory:settings.personalMemory}})});
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})),memoryContext:buildConversationMemory(c.id),preferences:{responseTone:settings.responseTone,responseLength:settings.responseLength,customInstructions:settings.customInstructions,personalMemory:settings.personalMemory}})});
     if(!r.ok){let t=await r.text();try{t=JSON.parse(t).error||t}catch{}throw Error(t||"Servizio AI non disponibile")}
     let answer="";
     if((r.headers.get("content-type")||"").includes("application/json")){const d=await r.json();answer=d.reply||d.response||d.message||""}
