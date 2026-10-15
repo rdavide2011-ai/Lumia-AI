@@ -221,6 +221,51 @@ body[data-theme="orange"] .composer,body[data-theme="orange"] .field{background:
 .composer-hint{font-size:9px}.settings-grid{grid-template-columns:1fr}
 .modal{padding:18px}
 }
+
+/* Rifinitura temi: nessun accento viola residuo su mobile + safe area iPhone. */
+@media(max-width:700px){
+  :root{color-scheme:dark}
+  html,body{width:100%;min-width:0;min-height:100%;background-color:var(--bg);overscroll-behavior:none}
+  body{height:100vh;height:100dvh;min-height:100svh;padding:0;margin:0}
+  .app{height:100vh;height:100dvh;min-height:100svh;min-width:0;overflow:hidden}
+  .main{min-width:0;width:100%;padding-top:env(safe-area-inset-top)}
+  .topbar{height:calc(58px + env(safe-area-inset-top));min-height:calc(58px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);background-color:var(--bg)}
+  .sidebar{height:100vh;height:100dvh;padding-top:calc(22px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom));background-color:var(--panel)}
+  .composer-area{padding-bottom:calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 25%)}
+  .send{background:linear-gradient(135deg,color-mix(in srgb,var(--purple) 88%,white),color-mix(in srgb,var(--purple) 78%,black));box-shadow:0 0 18px color-mix(in srgb,var(--purple) 28%,transparent)}
+  .composer{border-color:color-mix(in srgb,var(--purple) 42%,transparent)}
+  .dot{background:var(--purple);box-shadow:0 0 9px color-mix(in srgb,var(--purple) 65%,transparent)}
+  .message-name{color:var(--purple)}
+  .avatar{border-color:color-mix(in srgb,var(--purple) 30%,transparent)}
+  .icon-btn{border-color:color-mix(in srgb,var(--purple) 30%,transparent)}
+  .history-row:hover,.history-row.active{background:color-mix(in srgb,var(--purple) 13%,transparent)}
+  .chat-action:hover{color:var(--purple)}
+  .brand-name span{color:var(--purple)}
+  .top-tag{border-color:color-mix(in srgb,var(--purple) 30%,transparent);color:var(--purple)}
+  .new-chat,.primary,.action,.settings-form .action{
+    border-color:color-mix(in srgb,var(--purple) 60%,transparent);
+    background:linear-gradient(120deg,color-mix(in srgb,var(--purple) 35%,var(--panel)),color-mix(in srgb,var(--purple) 14%,var(--panel)));
+  }
+  #settingsModal .modal{
+    background:radial-gradient(ellipse at 50% -12%,color-mix(in srgb,var(--purple) 28%,transparent),transparent 48%),linear-gradient(160deg,var(--panel),var(--bg) 78%);
+    padding-top:calc(20px + env(safe-area-inset-top));
+    padding-bottom:calc(22px + env(safe-area-inset-bottom));
+  }
+  #settingsModal .modal-head{background:linear-gradient(color-mix(in srgb,var(--panel) 96%,transparent),color-mix(in srgb,var(--panel) 88%,transparent))}
+  #settingsModal .setting-card{background:linear-gradient(125deg,color-mix(in srgb,var(--purple) 10%,var(--panel)),var(--panel));border-color:color-mix(in srgb,var(--purple) 24%,transparent)}
+  #settingsModal .setting-card h3::before{background:linear-gradient(145deg,var(--purple),color-mix(in srgb,var(--purple) 35%,var(--panel)));box-shadow:0 5px 18px color-mix(in srgb,var(--purple) 20%,transparent),inset 0 1px 0 #ffffff35}
+  #settingsModal .panel{background:linear-gradient(145deg,color-mix(in srgb,var(--purple) 9%,var(--panel)),var(--panel));border-color:color-mix(in srgb,var(--purple) 24%,transparent)}
+  #settingsModal .field{border-color:color-mix(in srgb,var(--purple) 38%,transparent);background:color-mix(in srgb,var(--purple) 7%,var(--bg))}
+  #settingsModal .settings-form>label:not(.check-row){color:color-mix(in srgb,var(--purple) 45%,white)}
+  #settingsModal .settings-form .action{background:linear-gradient(120deg,color-mix(in srgb,var(--purple) 45%,var(--panel)),color-mix(in srgb,var(--purple) 18%,var(--panel)))}
+  #settingsModal .settings-form .action.secondary{background:color-mix(in srgb,var(--purple) 7%,var(--panel));border-color:color-mix(in srgb,var(--purple) 25%,transparent)}
+  #settingsModal .status{border-color:color-mix(in srgb,var(--purple) 20%,transparent);color:color-mix(in srgb,var(--purple) 35%,white)}
+  #devicesModal .modal{background:radial-gradient(ellipse at 50% -12%,color-mix(in srgb,var(--purple) 24%,transparent),transparent 48%),linear-gradient(160deg,var(--panel),var(--bg) 78%);padding-top:calc(20px + env(safe-area-inset-top));padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+}
+@supports(height:100dvh){
+  @media(max-width:700px){.app,.sidebar{height:100dvh}.main{min-height:0}}
+}
+
 </style>
 </head>
 <body>
@@ -401,7 +446,7 @@ function applyAppearance(){
   // Sul telefono usa il file logo dedicato al tema; su desktop lascia logo e grafica originali.
   const mobile=window.matchMedia("(max-width: 700px)").matches;
   const logoFiles={purple:"/logo.png",blue:"/logo-bluelettronico.png",pink:"/logo-rosaneon.png",mint:"/logo-verdementa.png",orange:"/logo-arancione.png"};
-  document.querySelectorAll(".hero-logo,.mobile-brand img").forEach(img=>{
+  document.querySelectorAll(".hero-logo,.mobile-brand img,.brand img").forEach(img=>{
     img.src=mobile?logoFiles[settings.accentColor]:"/logo.png";
     img.style.filter=mobile?"drop-shadow(0 0 24px "+t.glow+"99)":"";
   });
