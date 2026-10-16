@@ -338,15 +338,21 @@ async function searchWeb(query, options = {}) {
           return true;
         } catch { return false; }
       });
-      const apiMerged = mergeResults(diverseApiResults);
+      // Non fidarti della data restituita dal motore: apri ogni articolo e verifica
+      // la data editoriale dichiarata nella pagina della testata.
+      const verifiedApiResults = options.recent
+        ? await verifyResults(diverseApiResults)
+        : diverseApiResults;
+      const apiMerged = mergeResults(verifiedApiResults);
       console.log("Tavily API: risultati ricevuti:", Array.isArray(data.results) ? data.results.length : 0,
-        "- validi:", apiResults.length, "- unici:", apiMerged.length,
-        "- recenti con data:", apiMerged.filter(item => /^\d{4}-\d{2}-\d{2}$/.test(item.publishedDate || "")).length);
+        "- candidati validi:", apiResults.length, "- dopo verifica pagina:", verifiedApiResults.length,
+        "- unici:", apiMerged.length,
+        "- recenti con data verificata:", apiMerged.filter(item => /^\d{4}-\d{2}-\d{2}$/.test(item.publishedDate || "")).length);
       if (!options.recent && apiMerged.length) return apiMerged.slice(0, 5);
-      if (options.recent && apiMerged.filter(item => item.publishedDate).length >= 2) {
+      if (options.recent && apiMerged.filter(item => /^\d{4}-\d{2}-\d{2}$/.test(item.publishedDate || "")).length >= 2) {
         return apiMerged.slice(0, 5);
       }
-      console.warn("Tavily API: risultati insufficienti con data verificata; provo il fallback.");
+      console.warn("Tavily API: meno di due articoli con data verificata direttamente sulle pagine; provo il fallback.");
     } catch (error) {
       console.error("Tavily API non disponibile:", error.message);
     }
@@ -688,7 +694,10 @@ app.post("/api/chat", async (req, res) => {
           const link = "[" + source.title.replace(/\]/g, "") + "](" + source.url + ")";
           finalAnswer = finalAnswer.split(citation).join(link);
         }
-        if (!finalAnswer.includes("📚 Fonti") && citedSources.length) {
+        // La sezione fonti viene generata dal server, non dal modello: evita
+        // elenchi duplicati con pagine generiche o link non collegati alle notizie.
+        finalAnswer = finalAnswer.replace(/\n{0,2}#{0,4}\s*📚\s*\*{0,2}Fonti\*{0,2}[\s\S]*$/i, "").trim();
+        if (citedSources.length) {
           finalAnswer += "\n\n## 📚 Fonti\n" + citedSources.map(source => "- [" + source.title.replace(/\]/g, "") + "](" + source.url + ")").join("\n");
         }
         res.write(finalAnswer);
