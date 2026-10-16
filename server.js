@@ -710,6 +710,8 @@ app.post("/api/chat", async (req, res) => {
       }
       if (webResults.length) {
         let finalAnswer = collectedWebAnswer;
+        // Accetta link soltanto dalle fonti restituite dal server. Il modello può
+        // produrre URL inventati o collegare una notizia a una pagina non pertinente.
         const citedNumbers = new Set([...collectedWebAnswer.matchAll(/\[(\d+)\]/g)].map(match => Number(match[1])));
         const citedSources = webResults.filter(source => citedNumbers.has(source.number));
         for (const source of webResults) {
@@ -717,8 +719,18 @@ app.post("/api/chat", async (req, res) => {
           const link = "[" + source.title.replace(/\]/g, "") + "](" + source.url + ")";
           finalAnswer = finalAnswer.split(citation).join(link);
         }
-        // La sezione fonti viene generata dal server, non dal modello: evita
-        // elenchi duplicati con pagine generiche o link non collegati alle notizie.
+        // Elimina link markdown e URL grezzi generati dal modello che non appartengono
+        // a una fonte verificata dal backend.
+        const allowedUrls = new Set(webResults.map(source => source.url));
+        finalAnswer = finalAnswer.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (whole, label, url) =>
+          allowedUrls.has(url) ? whole : label
+        );
+        finalAnswer = finalAnswer.replace(/https?:\/\/[^\s)\]]+/g, url => {
+          const cleanUrl = url.replace(/[.,;!?]+$/, "");
+          return allowedUrls.has(cleanUrl) ? cleanUrl : "";
+        });
+        // La sezione fonti viene sempre ricostruita usando esclusivamente i risultati
+        // effettivi del backend: niente fonti inventate o liste duplicate dal modello.
         finalAnswer = finalAnswer.replace(/\n{0,2}#{0,4}\s*📚\s*\*{0,2}Fonti\*{0,2}[\s\S]*$/i, "").trim();
         if (citedSources.length) {
           finalAnswer += "\n\n## 📚 Fonti\n" + citedSources.map(source => "- [" + source.title.replace(/\]/g, "") + "](" + source.url + ")").join("\n");
