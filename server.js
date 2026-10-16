@@ -195,12 +195,12 @@ async function searchWeb(query, options = {}) {
   const parsePublishedDate = html => {
     // Cerca prima la data editoriale dichiarata, non la data di aggiornamento del sito.
     const priorityPatterns = [
-      /<meta\\b[^>]*(?:property|name)=["']article:published_time["'][^>]*content=["']([^"']+)["'][^>]*>/gi,
-      /<meta\\b[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']article:published_time["'][^>]*>/gi,
-      /<meta\\b[^>]*(?:name|property|itemprop)=["'](?:datePublished|datepublished|pubdate|publish-date)["'][^>]*content=["']([^"']+)["'][^>]*>/gi,
-      /<meta\\b[^>]*content=["']([^"']+)["'][^>]*(?:name|property|itemprop)=["'](?:datePublished|datepublished|pubdate|publish-date)["'][^>]*>/gi,
-      /["']datePublished["']\\s*:\\s*["']([^"']+)["']/gi,
-      /<time\\b[^>]*datetime=["']([^"']+)["'][^>]*>/gi
+      /<meta\b[^>]*(?:property|name)=["']article:published_time["'][^>]*content=["']([^"']+)["'][^>]*>/gi,
+      /<meta\b[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']article:published_time["'][^>]*>/gi,
+      /<meta\b[^>]*(?:name|property|itemprop)=["'](?:datePublished|datepublished|pubdate|publish-date)["'][^>]*content=["']([^"']+)["'][^>]*>/gi,
+      /<meta\b[^>]*content=["']([^"']+)["'][^>]*(?:name|property|itemprop)=["'](?:datePublished|datepublished|pubdate|publish-date)["'][^>]*>/gi,
+      /["']datePublished["']\s*:\s*["']([^"']+)["']/gi,
+      /<time\b[^>]*datetime=["']([^"']+)["'][^>]*>/gi
     ];
     const dates = [];
     for (const pattern of priorityPatterns) {
