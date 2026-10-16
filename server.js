@@ -249,6 +249,25 @@ async function searchWeb(query, options = {}) {
     return checked.filter(Boolean).map((item, index) => ({ ...item, number: index + 1 }));
   };
 
+  const collected = [];
+  const mergeResults = incoming => {
+    for (const item of incoming) {
+      let key = item.url;
+      try {
+        const parsed = new URL(item.url);
+        parsed.hash = "";
+        for (const param of [...parsed.searchParams.keys()]) {
+          if (/^(?:utm_.+|fbclid|gclid|ref|source)$/i.test(param)) parsed.searchParams.delete(param);
+        }
+        key = parsed.toString().replace(/\\/$/, "");
+      } catch {}
+      if (collected.some(existing => existing._dedupeKey === key)) continue;
+      collected.push({ ...item, _dedupeKey: key });
+      if (collected.length >= 5) break;
+    }
+    return collected.slice(0, 5).map(({ _dedupeKey, ...item }, index) => ({ ...item, number: index + 1 }));
+  };
+
   const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
   for (const instance of instances) {
     try {
@@ -264,11 +283,10 @@ async function searchWeb(query, options = {}) {
       if (!response.ok) throw new Error("HTTP " + response.status);
       const data = await response.json();
       const results = await verifyResults(normalizeResults(data.results));
-      if (results.length) {
-        console.log("Ricerca web riuscita tramite SearXNG:", instance, "- risultati verificati:", results.length);
-        return results;
-      }
-      throw new Error("Nessun risultato utilizzabile");
+      const merged = mergeResults(results);
+      console.log("SearXNG controllato:", instance, "- verificati:", results.length, "- totali unici:", merged.length);
+      if (merged.length >= 5) return merged;
+      if (!results.length) throw new Error("Nessun risultato utilizzabile");
     } catch (error) {
       console.warn("SearXNG non disponibile:", instance, error.message);
     }
@@ -310,11 +328,12 @@ async function searchWeb(query, options = {}) {
       });
     }
     const verifiedResults = await verifyResults(results);
-    if (verifiedResults.length) {
-      console.log("Ricerca web riuscita tramite DuckDuckGo HTML - risultati verificati:", verifiedResults.length);
-      return verifiedResults;
+    const merged = mergeResults(verifiedResults);
+    if (merged.length) {
+      console.log("Ricerca web completata - risultati verificati unici:", merged.length);
+      return merged;
     }
-    throw new Error("DuckDuckGo non ha restituito risultati estraibili");
+    throw new Error("Nessun risultato verificabile dai motori di ricerca");
   } catch (error) {
     console.warn("Fallback DuckDuckGo non disponibile:", error.message);
     throw error;
