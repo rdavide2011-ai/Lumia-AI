@@ -169,8 +169,20 @@ async function searchWeb(query) {
     .replace(/\s+/g, " ").trim();
 
   const normalizeResults = results => (Array.isArray(results) ? results : [])
-    .filter(x => x && typeof x.title === "string" && typeof x.url === "string" &&
-      (x.url.startsWith("https://") || x.url.startsWith("http://")))
+    .filter(x => {
+      if (!x || typeof x.title !== "string" || typeof x.url !== "string" ||
+          !(x.url.startsWith("https://") || x.url.startsWith("http://"))) return false;
+      try {
+        const parsed = new URL(x.url);
+        const path = parsed.pathname.replace(/\\/+$/, "").toLowerCase();
+        const parts = path.split("/").filter(Boolean);
+        const last = parts[parts.length - 1] || "";
+        const genericEndings = /^(?:ultime-notizie|notizie|news|tag|tags|argomenti|categoria|category|topic|topics|intelligenza-artificiale|artificial-intelligence|ai|ricerca|tecnologia|tecnologie|innovazione|innovation|feed|search|home|index|page-?\\d*)$/i;
+        if (!parts.length || genericEndings.test(last)) return false;
+        if (/\\/(?:tag|tags|categoria|category|argomenti|topics?|search|feed)\\//i.test(path)) return false;
+        return true;
+      } catch { return false; }
+    })
     .slice(0, 5)
     .map((x, i) => ({number:i+1,title:cleanText(x.title).slice(0,240),url:x.url.slice(0,1500),snippet:cleanText(x.content||x.description||x.snippet||"").slice(0,700),image:(typeof x.thumbnail==="string"&&x.thumbnail.startsWith("https://")?x.thumbnail:typeof x.img_src==="string"&&x.img_src.startsWith("https://")?x.img_src:"")}))
     .filter(x => x.title && x.url);
@@ -212,9 +224,9 @@ async function searchWeb(query) {
       });
       if (!response.ok) throw new Error("HTTP " + response.status);
       const data = await response.json();
-      const results = normalizeResults(data.results);
+      const results = await verifyResults(normalizeResults(data.results));
       if (results.length) {
-        console.log("Ricerca web riuscita tramite SearXNG:", instance, "- risultati:", results.length);
+        console.log("Ricerca web riuscita tramite SearXNG:", instance, "- risultati verificati:", results.length);
         return results;
       }
       throw new Error("Nessun risultato utilizzabile");
@@ -258,9 +270,10 @@ async function searchWeb(query) {
         snippet: cleanText(snippetMatch?.[1] || snippetMatch?.[2] || "").slice(0, 700)
       });
     }
-    if (results.length) {
-      console.log("Ricerca web riuscita tramite DuckDuckGo HTML - risultati:", results.length);
-      return results;
+    const verifiedResults = await verifyResults(results);
+    if (verifiedResults.length) {
+      console.log("Ricerca web riuscita tramite DuckDuckGo HTML - risultati verificati:", verifiedResults.length);
+      return verifiedResults;
     }
     throw new Error("DuckDuckGo non ha restituito risultati estraibili");
   } catch (error) {
@@ -321,7 +334,7 @@ app.post("/api/chat", async (req, res) => {
         const query = lastUser.content;
         const asksNews = /notizie|news|ultime|novit[aà]|sviluppi|ultimi\s+\d+\s+giorni/i.test(query);
         const searchQuery = asksNews
-          ? query + " articoli notizie recenti pubblicati oggi ieri questa settimana data pubblicazione"
+          ? query + " articoli specifici pubblicati negli ultimi giorni data di pubblicazione ottobre 2026 -tag -categoria"
           : query;
         webResults = await searchWeb(searchQuery);
       } catch (error) {
@@ -334,7 +347,7 @@ app.post("/api/chat", async (req, res) => {
       : "";
     const systemContent = [
       "Sei Lumia AI, un assistente intelligente. Rispondi in italiano in modo chiaro, utile e rispettoso.",
-      webResults.length ? "FORMATO RISPOSTA CON RICERCA WEB: crea una rassegna giornalistica ben impaginata, non un muro di testo. Usa Markdown semplice perché l’interfaccia lo renderizza in titoli, elenchi e link. Inizia con una sola intestazione breve con emoji pertinente (es. 📰), poi una riga con periodo cercato e una breve sintesi generale. Raggruppa le notizie in massimo 3 sezioni con emoji sobrie (es. 🚀 Tecnologia, 🌍 Impatto, 🛡️ Sicurezza), evitando categorie inutili. Per ogni notizia usa un titolo breve e specifico, data e testata solo se disponibili, poi un riassunto chiaro di 2-4 frasi. Unisci notizie duplicate sullo stesso evento. Aggiungi immagini solo se i risultati web forniscono un URL immagine esplicito e sicuro: usa la sintassi Markdown ![descrizione](URL); non inventare URL né usare immagini decorative generiche. I richiami alle fonti vanno accanto alla notizia. Alla fine crea una sezione 📚 Fonti con elenco ordinato di soli articoli effettivamente citati, link cliccabili con nome della testata e titolo specifico; niente URL grezzi e niente pagine-categoria se esistono fonti articolo. Non usare una lista separata di fonti non citate. Usa esclusivamente titoli, URL e dettagli ricevuti. Copia ogni URL esattamente come compare nei risultati web: non ricostruire, correggere, accorciare o inventare indirizzi. Non inventare fatti, date o fonti. Escludi pagine-categoria, tag e home page dalle notizie. Se l’URL contiene un anno o una data precedente al periodo richiesto, non presentarlo come recente. Se non hai una data verificabile, non dichiarare che l’articolo è degli ultimi 7 giorni. Se non trovi almeno 2 notizie specifiche, recenti e supportate, dichiaralo in modo conciso." : "",
+      webResults.length ? "FORMATO RISPOSTA CON RICERCA WEB: crea una rassegna giornalistica ben impaginata, non un muro di testo. Usa Markdown semplice perché l’interfaccia lo renderizza in titoli, elenchi e link. Inizia con una sola intestazione breve con emoji pertinente (es. 📰), poi una riga con periodo cercato e una breve sintesi generale. Raggruppa le notizie in massimo 3 sezioni con emoji sobrie (es. 🚀 Tecnologia, 🌍 Impatto, 🛡️ Sicurezza), evitando categorie inutili. Per ogni notizia usa un titolo breve e specifico, data e testata solo se disponibili, poi un riassunto chiaro di 2-4 frasi. Unisci notizie duplicate sullo stesso evento. Aggiungi immagini solo se i risultati web forniscono un URL immagine esplicito e sicuro: usa la sintassi Markdown ![descrizione](URL); non inventare URL né usare immagini decorative generiche. I richiami alle fonti vanno accanto alla notizia. Alla fine crea una sezione 📚 Fonti con elenco ordinato di soli articoli effettivamente citati, link cliccabili con nome della testata e titolo specifico; niente URL grezzi e niente pagine-categoria se esistono fonti articolo. Non usare una lista separata di fonti non citate. Usa esclusivamente titoli, URL e dettagli ricevuti. Copia ogni URL esattamente come compare nei risultati web: non ricostruire, correggere, accorciare o inventare indirizzi. Non inventare fatti, date o fonti. Escludi pagine-categoria, tag, home page e pagine di raccolta dalle notizie: ogni fonte deve puntare direttamente a un articolo specifico. Se i risultati contengono soltanto pagine generiche o non mostrano date verificabili, non trasformarli in notizie e non riempire le sezioni con informazioni generali: dichiara che non ci sono abbastanza articoli verificabili. Non inventare un finanziamento, una cifra, un evento o una data partendo dal solo titolo di una categoria. Se l’URL contiene un anno o una data precedente al periodo richiesto, non presentarlo come recente. Se non hai una data verificabile, non dichiarare che l’articolo è degli ultimi 7 giorni. Se non trovi almeno 2 notizie specifiche, recenti e supportate, dichiaralo in modo conciso." : "",
       webSearchFailed ? "La ricerca web non è riuscita. Non affermare di aver cercato e non inventare fonti; spiega il limite se servono informazioni aggiornate." : "",
       !webResults.length && !webSearchFailed && shouldSearchWeb(validMessages) ? "La ricerca web non ha trovato risultati utilizzabili. Non inventare fonti e dichiara il limite." : "",
       "IDENTITÀ DI LUMIA: sei Lumia AI, un progetto creato e programmato da Davide, che ha realizzato personalmente l'applicazione e ne cura lo sviluppo. Se ti chiedono chi sei, chi ti ha creato o chi ti ha programmato, spiega con naturalezza che sei Lumia AI, l'assistente sviluppato e programmato da Davide. Puoi dire, per esempio, \"Ciao! Sono Lumia AI, l'assistente che Davide ha creato e programmato personalmente. Piacere di conoscerti!\" ma varia la formulazione in base alla conversazione: non ripetere sempre la stessa frase e non presentarti in modo lungo a ogni semplice saluto. Se l'utente dice solo \"ciao\", rispondi in modo breve e amichevole; puoi aggiungere una breve menzione a Davide quando suona naturale. Se ti chiedono dettagli tecnici non confermati su come sei stato costruito o addestrato, non inventarli: distingui il progetto/applicazione sviluppato da Davide dal modello AI utilizzato dal servizio. Non sostenere che Davide abbia creato da zero il modello di base se non è confermato.",
