@@ -343,6 +343,18 @@ app.post("/api/chat", async (req, res) => {
         webSearchFailed = true;
       }
     }
+    // Per le ricerche di notizie, elimina gli articoli con una data esplicita nell'URL fuori dagli ultimi 7 giorni.
+    const lastUserText = [...validMessages].reverse().find(m => m.role === "user")?.content || "";
+    const isNewsRequest = /notizie|news|ultime|novit[aà]|sviluppi|ultimi\s+\d+\s+giorni/i.test(lastUserText);
+    if (isNewsRequest && webResults.length) {
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      webResults = webResults.filter(source => {
+        const match = source.url.match(/\/(20\d{2})\/(\d{1,2})\/(\d{1,2})(?:\/|$)/);
+        if (!match) return true;
+        const published = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        return !Number.isNaN(published.getTime()) && published >= new Date(cutoff.getFullYear(), cutoff.getMonth(), cutoff.getDate());
+      }).map((source, index) => ({ ...source, number: index + 1 }));
+    }
     const webContext = webResults.length
       ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\nURL: " + x.url + "\nEstratto: " + x.snippet + (x.image ? "\nImmagine: " + x.image : "")).join("\n\n")
       : "";
@@ -419,16 +431,15 @@ app.post("/api/chat", async (req, res) => {
       }
       if (webResults.length) {
         let finalAnswer = collectedWebAnswer;
+        const citedNumbers = new Set([...collectedWebAnswer.matchAll(/\[(\d+)\]/g)].map(match => Number(match[1])));
+        const citedSources = webResults.filter(source => citedNumbers.has(source.number));
         for (const source of webResults) {
           const citation = "[" + source.number + "]";
           const link = "[" + source.title.replace(/\]/g, "") + "](" + source.url + ")";
           finalAnswer = finalAnswer.split(citation).join(link);
         }
-        const sourceLines = webResults.map(source => "- [" + source.title.replace(/\]/g, "") + "](" + source.url + ")");
-        if (!finalAnswer.includes("📚 Fonti")) {
-          finalAnswer += "\n\n## 📚 Fonti\n" + sourceLines.join("\n");
-        } else {
-          finalAnswer += "\n\n## 🔗 Link diretti alle fonti\n" + sourceLines.join("\n");
+        if (!finalAnswer.includes("📚 Fonti") && citedSources.length) {
+          finalAnswer += "\n\n## 📚 Fonti\n" + citedSources.map(source => "- [" + source.title.replace(/\]/g, "") + "](" + source.url + ")").join("\n");
         }
         res.write(finalAnswer);
       }
