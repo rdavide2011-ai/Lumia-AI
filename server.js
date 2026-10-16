@@ -329,7 +329,17 @@ async function searchWeb(query, options = {}) {
           if (host === "theguardian.com" && /^\/technology\/artificialintelligenceai\/?$/i.test(path)) return false;
           if (host === "dw.com" && /^\/en\/artificial-intelligence\/t-\d+\/?$/i.test(path)) return false;
           if (/\/(?:artificial-intelligence|intelligenza-artificiale|ai)\/?$/i.test(path)) return false;
+          if (host === "origami.sa" && /^\/it\/blog\/?$/i.test(path)) return false;
+          if (host === "turbolab.it" && /blockstrap-nuova-vulnerabilita-critica-magento/i.test(path)) return false;
           if (item.title.length < 18 || item.snippet.length < 45) return false;
+          // Le rassegne devono parlare davvero di IA: la sola presenza di "AI"
+          // in una pagina aggregatrice o in un titolo non pertinente non basta.
+          if (options.recent) {
+            const relevant = /intelligenza artificiale|artificial intelligence|\bAI\b|\bIA\b|machine learning|deep learning|\bLLM\b|modelli? linguistici?|generative AI|IA generativa|ChatGPT|OpenAI|Anthropic|Claude|Gemini|DeepMind|Meta AI|Muse Wonder|Copilot|robotica|AI-assisted|generat[oa] con l['’ ]?AI|generato dall['’ ]?AI/i;
+            if (!relevant.test(item.title)) return false;
+            const noisyPage = /show more|skip next section|advertisement|in the spotlight|ultimi articoli|più letti|anteprima|precedente|successivo/i;
+            if (noisyPage.test(item.snippet) && item.snippet.length > 600) return false;
+          }
           if (options.recent && /(?:show more|skip next section|advertisement|in the spotlight|ultimi articoli|più letti)/i.test(item.snippet) &&
               item.snippet.length > 900) return false;
         } catch { return false; }
