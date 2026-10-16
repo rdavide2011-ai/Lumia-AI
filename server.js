@@ -229,7 +229,7 @@ app.post("/api/chat", async (req, res) => {
       }
     }
     const webContext = webResults.length
-      ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\\nURL: " + x.url + "\\nEstratto: " + x.snippet).join("\\n\\n")
+      ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\nURL: " + x.url + "\nEstratto: " + x.snippet).join("\n\n")
       : "";
     const systemContent = [
       "Sei Lumia AI, un assistente intelligente. Rispondi in italiano in modo chiaro, utile e rispettoso.",
