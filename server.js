@@ -269,6 +269,72 @@ async function searchWeb(query, options = {}) {
     return collected.slice(0, 5).map(({ _dedupeKey, ...item }, index) => ({ ...item, number: index + 1 }));
   };
 
+  // Ricerca notizie tramite Google News RSS: non richiede API key e include la data
+  // di pubblicazione indicata dal feed. È il percorso prioritario per le richieste recenti.
+  if (options.recent) {
+    try {
+      const rssUrl = new URL("https://news.google.com/rss/search");
+      rssUrl.searchParams.set("q", (query + " when:7d").slice(0, 400));
+      rssUrl.searchParams.set("hl", "it");
+      rssUrl.searchParams.set("gl", "IT");
+      rssUrl.searchParams.set("ceid", "IT:it");
+      const rssResponse = await fetch(rssUrl, {
+        headers: { Accept: "application/rss+xml, application/xml, text/xml", "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!rssResponse.ok) throw new Error("Google News RSS HTTP " + rssResponse.status);
+      const rss = await rssResponse.text();
+      const items = [];
+      const decodeXml = value => cleanText(String(value || "")
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+        .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+        .replace(/&apos;/g, "'"));
+      const getTag = (block, tag) => {
+        const match = block.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
+        return match ? decodeXml(match[1]) : "";
+      };
+      for (const block of rss.split(/<item\b[^>]*>/i).slice(1)) {
+        if (items.length >= 10) break;
+        const itemBlock = block.split(/<\/item>/i)[0];
+        const title = getTag(itemBlock, "title");
+        const link = getTag(itemBlock, "link");
+        const pubDateText = getTag(itemBlock, "pubDate");
+        const source = getTag(itemBlock, "source");
+        const published = new Date(pubDateText);
+        if (!title || !/^https?:\/\//i.test(link) || Number.isNaN(published.getTime())) continue;
+        if (published.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000 || published.getTime() > Date.now() + 24 * 60 * 60 * 1000) continue;
+        let articleUrl = link;
+        // Google News links usually redirect to the publisher's actual article.
+        try {
+          const articleResponse = await fetch(link, {
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)", Accept: "text/html" },
+            redirect: "follow",
+            signal: AbortSignal.timeout(4500)
+          });
+          if (articleResponse.url && /^https?:\/\//i.test(articleResponse.url) &&
+              !new URL(articleResponse.url).hostname.endsWith("news.google.com")) {
+            articleUrl = articleResponse.url;
+          }
+          if (articleResponse.body) await articleResponse.body.cancel().catch(() => {});
+        } catch {}
+        items.push({
+          number: items.length + 1,
+          title: title.replace(/\s+-\s+[^-]+$/, "").trim().slice(0, 240),
+          url: articleUrl.slice(0, 1500),
+          snippet: source ? "Testata: " + source : "Articolo trovato tramite Google News RSS.",
+          publishedDate: published.toISOString().slice(0, 10),
+          image: ""
+        });
+      }
+      const merged = mergeResults(items);
+      console.log("Google News RSS:", items.length, "articoli recenti trovati; unici:", merged.length);
+      if (merged.length >= 2) return merged;
+    } catch (error) {
+      console.warn("Google News RSS non disponibile:", error.message);
+    }
+  }
+
   const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
   for (const instance of instances) {
     try {
