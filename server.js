@@ -203,6 +203,20 @@ app.post("/api/chat", async (req, res) => {
     const memoryContext = typeof req.body?.memoryContext === "string"
       ? req.body.memoryContext.trim().slice(0, 5000)
       : "";
+    let webResults = [];
+    let webSearchFailed = false;
+    if (shouldSearchWeb(validMessages)) {
+      try {
+        const lastUser = [...validMessages].reverse().find(m => m.role === "user");
+        webResults = await searchWeb(lastUser.content);
+      } catch (error) {
+        console.warn("Ricerca web non disponibile:", error.message);
+        webSearchFailed = true;
+      }
+    }
+    const webContext = webResults.length
+      ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\\nURL: " + x.url + "\\nEstratto: " + x.snippet).join("\\n\\n")
+      : "";
     const systemContent = [
       "Sei Lumia AI, un assistente intelligente. Rispondi in italiano in modo chiaro, utile e rispettoso.",
       "IDENTITÀ DI LUMIA: sei Lumia AI, un progetto creato e programmato da Davide, che ha realizzato personalmente l'applicazione e ne cura lo sviluppo. Se ti chiedono chi sei, chi ti ha creato o chi ti ha programmato, spiega con naturalezza che sei Lumia AI, l'assistente sviluppato e programmato da Davide. Puoi dire, per esempio, \"Ciao! Sono Lumia AI, l'assistente che Davide ha creato e programmato personalmente. Piacere di conoscerti!\" ma varia la formulazione in base alla conversazione: non ripetere sempre la stessa frase e non presentarti in modo lungo a ogni semplice saluto. Se l'utente dice solo \"ciao\", rispondi in modo breve e amichevole; puoi aggiungere una breve menzione a Davide quando suona naturale. Se ti chiedono dettagli tecnici non confermati su come sei stato costruito o addestrato, non inventarli: distingui il progetto/applicazione sviluppato da Davide dal modello AI utilizzato dal servizio. Non sostenere che Davide abbia creato da zero il modello di base se non è confermato.",
