@@ -174,12 +174,12 @@ async function searchWeb(query) {
           !(x.url.startsWith("https://") || x.url.startsWith("http://"))) return false;
       try {
         const parsed = new URL(x.url);
-        const path = parsed.pathname.replace(/\\/+$/, "").toLowerCase();
+        const path = parsed.pathname.replace(/\/+$/, "").toLowerCase();
         const parts = path.split("/").filter(Boolean);
         const last = parts[parts.length - 1] || "";
-        const genericEndings = /^(?:ultime-notizie|notizie|news|tag|tags|argomenti|categoria|category|topic|topics|intelligenza-artificiale|artificial-intelligence|ai|ricerca|tecnologia|tecnologie|innovazione|innovation|feed|search|home|index|page-?\\d*)$/i;
+        const genericEndings = /^(?:ultime-notizie|notizie|news|tag|tags|argomenti|categoria|category|topic|topics|intelligenza-artificiale|artificial-intelligence|ai|ricerca|tecnologia|tecnologie|innovazione|innovation|feed|search|home|index|page-?\d*)$/i;
         if (!parts.length || genericEndings.test(last)) return false;
-        if (/\\/(?:tag|tags|categoria|category|argomenti|topics?|search|feed)\\//i.test(path)) return false;
+        if (/\/(?:tag|tags|categoria|category|argomenti|topics?|search|feed)\//i.test(path)) return false;
         return true;
       } catch { return false; }
     })
