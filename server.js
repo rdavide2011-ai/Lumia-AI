@@ -269,6 +269,69 @@ async function searchWeb(query, options = {}) {
     return collected.slice(0, 5).map(({ _dedupeKey, ...item }, index) => ({ ...item, number: index + 1 }));
   };
 
+  // Provider API primario: Tavily. Per attivarlo, impostare TAVILY_API_KEY nelle variabili d'ambiente.
+  if (process.env.TAVILY_API_KEY) {
+    try {
+      const recentQuery = options.recent
+        ? String(query || "").replace(/\s+articoli originali pubblicati dal[\s\S]*$/i, "").replace(/-tag|-categoria/gi, "").replace(/\s+/g, " ").trim()
+        : String(query || "");
+      const response = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + process.env.TAVILY_API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          query: recentQuery,
+          topic: options.recent ? "news" : "general",
+          time_range: options.recent ? "week" : undefined,
+          search_depth: "advanced",
+          max_results: 10,
+          include_answer: false,
+          include_raw_content: false,
+          include_images: false,
+          country: "italy"
+        }),
+        signal: AbortSignal.timeout(20000)
+      });
+      if (!response.ok) {
+        const details = (await response.text().catch(() => "")).slice(0, 500);
+        throw new Error("Tavily API HTTP " + response.status + (details ? ": " + details : ""));
+      }
+      const data = await response.json();
+      const now = Date.now();
+      const cutoff = now - 7 * 24 * 60 * 60 * 1000;
+      const apiResults = (Array.isArray(data.results) ? data.results : []).map(item => {
+        const rawDate = item.published_date || item.publishedDate || item.date || "";
+        const parsedDate = rawDate ? new Date(rawDate) : null;
+        const validDate = parsedDate && !Number.isNaN(parsedDate.getTime()) &&
+          parsedDate.getTime() >= cutoff && parsedDate.getTime() <= now + 24 * 60 * 60 * 1000;
+        return {
+          title: cleanText(item.title || ""),
+          url: typeof item.url === "string" ? item.url : "",
+          snippet: cleanText(item.content || item.snippet || ""),
+          publishedDate: validDate ? parsedDate.toISOString().slice(0, 10) : "",
+          image: ""
+        };
+      }).filter(item => {
+        if (!item.title || !/^https?:\/\//i.test(item.url)) return false;
+        if (options.recent && !item.publishedDate) return false;
+        return true;
+      });
+      const apiMerged = mergeResults(apiResults);
+      console.log("Tavily API: risultati ricevuti:", Array.isArray(data.results) ? data.results.length : 0,
+        "- validi:", apiResults.length, "- unici:", apiMerged.length,
+        "- recenti con data:", apiMerged.filter(item => /^\d{4}-\d{2}-\d{2}$/.test(item.publishedDate || "")).length);
+      if (!options.recent && apiMerged.length) return apiMerged.slice(0, 5);
+      if (options.recent && apiMerged.filter(item => item.publishedDate).length >= 2) {
+        return apiMerged.slice(0, 5);
+      }
+      console.warn("Tavily API: risultati insufficienti con data verificata; provo il fallback.");
+    } catch (error) {
+      console.error("Tavily API non disponibile:", error.message);
+    }
+  }
+
   // Fonte primaria per le notizie: Google News RSS, gratuita e senza API key.
   // Prova più query semplici: non passare al motore una frase lunga piena di istruzioni.
   if (options.recent) {
