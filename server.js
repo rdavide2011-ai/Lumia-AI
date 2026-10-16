@@ -665,7 +665,12 @@ app.post("/api/chat", async (req, res) => {
           try {
             const item = JSON.parse(payload);
             if (item.response) { if (webResults.length) collectedWebAnswer += item.response; else res.write(item.response); }
-            if (item.error) console.error("Errore Cloudflare stream:", item.error);
+            if (item.error) {
+              console.error("Errore Cloudflare stream:", JSON.stringify(item.error));
+              if (!webResults.length && !res.writableEnded && !res.destroyed) {
+                res.write("\\n\\n[Il servizio AI ha segnalato un errore durante la generazione.]");
+              }
+            }
           } catch (error) {
             console.error("Evento AI non valido:", error.message);
           }
@@ -704,9 +709,21 @@ app.post("/api/chat", async (req, res) => {
       }
       res.end();
     } catch (error) {
-      console.error("Errore durante lo streaming:", error);
-      if (!res.headersSent) res.status(502).json({ error: "Errore durante la generazione della risposta." });
-      else res.end();
+      console.error("Errore durante lo streaming Cloudflare:", error && (error.stack || error.message || String(error)));
+      // Se lo stream si interrompe dopo l'invio degli header, restituisci un messaggio
+      // leggibile invece di terminare con una risposta vuota/incompleta.
+      if (!res.headersSent) {
+        res.status(502).json({ error: "Errore durante la generazione della risposta." });
+      } else {
+        if (!res.writableEnded && !res.destroyed) {
+          if (webResults.length && !collectedWebAnswer.trim()) {
+            res.write("La ricerca web è riuscita, ma il servizio AI ha interrotto la generazione. Riprova tra poco.");
+          } else if (!webResults.length) {
+            res.write("\\n\\n[La generazione si è interrotta prima del completamento. Riprova tra poco.]");
+          }
+          res.end();
+        }
+      }
     }
   } catch (error) {
     console.error("Errore chat:", error);
