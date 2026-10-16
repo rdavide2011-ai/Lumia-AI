@@ -376,6 +376,7 @@ app.post("/api/chat", async (req, res) => {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let collectedWebAnswer = "";
 
     try {
       while (true) {
@@ -394,7 +395,7 @@ app.post("/api/chat", async (req, res) => {
 
           try {
             const item = JSON.parse(payload);
-            if (item.response) res.write(item.response);
+            if (item.response) { if (webResults.length) collectedWebAnswer += item.response; else res.write(item.response); }
             if (item.error) console.error("Errore Cloudflare stream:", item.error);
           } catch (error) {
             console.error("Evento AI non valido:", error.message);
@@ -409,11 +410,26 @@ app.post("/api/chat", async (req, res) => {
         if (payload && payload !== "[DONE]") {
           try {
             const item = JSON.parse(payload);
-            if (item.response) res.write(item.response);
+            if (item.response) { if (webResults.length) collectedWebAnswer += item.response; else res.write(item.response); }
           } catch (error) {
             console.error("Ultimo evento AI non valido:", error.message);
           }
         }
+      }
+      if (webResults.length) {
+        let finalAnswer = collectedWebAnswer;
+        for (const source of webResults) {
+          const citation = "[" + source.number + "]";
+          const link = "[" + source.title.replace(/\]/g, "") + "](" + source.url + ")";
+          finalAnswer = finalAnswer.split(citation).join(link);
+        }
+        const sourceLines = webResults.map(source => "- [" + source.title.replace(/\]/g, "") + "](" + source.url + ")");
+        if (!finalAnswer.includes("📚 Fonti")) {
+          finalAnswer += "\n\n## 📚 Fonti\n" + sourceLines.join("\n");
+        } else {
+          finalAnswer += "\n\n## 🔗 Link diretti alle fonti\n" + sourceLines.join("\n");
+        }
+        res.write(finalAnswer);
       }
       res.end();
     } catch (error) {
