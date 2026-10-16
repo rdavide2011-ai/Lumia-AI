@@ -311,6 +311,25 @@ body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d
 .panel{background:linear-gradient(145deg,color-mix(in srgb,var(--purple) 9%,var(--panel)),var(--panel));border-color:color-mix(in srgb,var(--purple) 24%,transparent)}
 .field{background:color-mix(in srgb,var(--purple) 7%,var(--bg));border-color:color-mix(in srgb,var(--purple) 38%,transparent)}
 .status,.countdown{color:color-mix(in srgb,var(--purple) 35%,white)}
+
+/* Tastiera mobile: il compositore segue la viewport visibile senza spostare tutta la pagina. */
+@media(max-width:700px){
+  html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+  .app{height:100%;min-height:0}
+  .main{height:100%;min-height:0;overflow:hidden}
+  .chat{min-height:0;overscroll-behavior:contain;scroll-padding-bottom:18px}
+  .composer-area{
+    position:fixed;left:0;right:0;bottom:calc(100dvh - var(--lumia-vv-height, 100dvh) - var(--lumia-vv-top, 0px));
+    z-index:30;width:100%;padding:8px 12px max(8px,env(safe-area-inset-bottom));
+    background:linear-gradient(transparent,var(--bg) 18%);
+    transition:none;
+  }
+  .composer{width:100%;padding:10px;border-radius:17px}
+  .composer-bottom{margin-top:5px}
+  .composer-hint{font-size:9px}
+  .disclaimer{margin-top:5px;font-size:9px}
+}
+
 </style>
 </head>
 <body>
@@ -816,6 +835,28 @@ $("sidebarShade").onclick=closeSidebar;
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o){if(o.id==="devicesModal")stopScanner();o.hidden=true}}));
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".overlay").forEach(o=>o.hidden=true);stopScanner();closeSidebar()}});
 window.addEventListener("beforeunload",stopScanner);
+
+/* Aggiorna solo l'ancoraggio della barra di scrittura alla viewport visibile
+   (che si riduce quando compare la tastiera); non scrolla l'intera pagina. */
+(function setupMobileKeyboardLayout(){
+  const updateVisibleViewport=()=>{
+    const viewport=window.visualViewport;
+    if(viewport){
+      document.documentElement.style.setProperty("--lumia-vv-height",viewport.height+"px");
+      document.documentElement.style.setProperty("--lumia-vv-top",viewport.offsetTop+"px");
+    }else{
+      document.documentElement.style.setProperty("--lumia-vv-height",window.innerHeight+"px");
+      document.documentElement.style.setProperty("--lumia-vv-top","0px");
+    }
+  };
+  updateVisibleViewport();
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize",updateVisibleViewport,{passive:true});
+    window.visualViewport.addEventListener("scroll",updateVisibleViewport,{passive:true});
+  }
+  window.addEventListener("resize",updateVisibleViewport,{passive:true});
+})();
+
 applyAppearance();fillSettingsForm();renderHistory();showWelcome();
 window.addEventListener("resize",applyAppearance);
 </script>
