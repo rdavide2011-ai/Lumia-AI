@@ -40,9 +40,14 @@ async function callCloudflare(messages, options = {}) {
 }
 
 app.get("/api/health", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   res.json({
     status: "online",
-    aiConfigured: Boolean(CF_ACCOUNT_ID && CF_API_TOKEN)
+    service: "Lumia AI",
+    build: process.env.RENDER_GIT_COMMIT || process.env.COMMIT_SHA || "unknown",
+    aiConfigured: Boolean(CF_ACCOUNT_ID && CF_API_TOKEN),
+    webSearchConfigured: true,
+    checkedAt: new Date().toISOString()
   });
 });
 
