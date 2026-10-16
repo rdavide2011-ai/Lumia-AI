@@ -454,7 +454,21 @@ body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-const STORAGE_KEY="lumia_ai_conversations_v1";
+const LEGACY_STORAGE_KEY="lumia_ai_conversations_v1";
+const DEVICE_ID_KEY="lumia_ai_device_id_v1";
+function getDeviceStorageKey(){
+  try{
+    let deviceId=localStorage.getItem(DEVICE_ID_KEY);
+    if(!deviceId){
+      deviceId=crypto.randomUUID?crypto.randomUUID():"device-"+Date.now()+"-"+Math.random().toString(36).slice(2);
+      localStorage.setItem(DEVICE_ID_KEY,deviceId);
+    }
+    return "lumia_ai_conversations_v2_"+deviceId;
+  }catch{
+    return "lumia_ai_conversations_v2_session";
+  }
+}
+const STORAGE_KEY=getDeviceStorageKey();
 const SETTINGS_KEY="lumia_ai_preferences_v1";
 const DEFAULT_SETTINGS={accentColor:"purple",fontSize:"14",animationsEnabled:true,responseTone:"friendly",responseLength:"balanced",customInstructions:"",personalMemory:""};
 function loadSettings(){
@@ -468,7 +482,20 @@ let pendingImport=null,scannerStream=null,scannerTimer=null,scannerActive=false;
 function id(){return crypto.randomUUID?crypto.randomUUID():"chat-"+Date.now()+"-"+Math.random().toString(36).slice(2)}
 function loadConversations(){
   try{
-    const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+    let stored=localStorage.getItem(STORAGE_KEY);
+    if(stored===null){
+      /*
+       * Migrazione locale una tantum: conserva le chat già presenti in questo
+       * browser. Da ora in poi ogni installazione usa una chiave con ID proprio.
+       * Nessuna conversazione viene letta dal server.
+       */
+      const legacy=localStorage.getItem(LEGACY_STORAGE_KEY);
+      if(legacy!==null){
+        localStorage.setItem(STORAGE_KEY,legacy);
+        stored=legacy;
+      }
+    }
+    const data=JSON.parse(stored||"[]");
     if(!Array.isArray(data))return [];
     return data.filter(c=>c&&typeof c==="object"&&Array.isArray(c.messages)&&c.messages.length)
       .map(c=>({...c,id:c.id||id(),title:c.title||"Conversazione",pinned:!!c.pinned,manualTitle:!!c.manualTitle}));
