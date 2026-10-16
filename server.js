@@ -190,7 +190,7 @@ async function searchWeb(query) {
           console.warn("Link non valido escluso dalla ricerca:", item.url, response.status);
           return null;
         }
-        if (response.url && /^https?:\\/\\//i.test(response.url)) item.url = response.url;
+        if (response.url && /^https?:\/\//i.test(response.url)) item.url = response.url;
         return item;
       } catch {
         return item;
