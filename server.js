@@ -183,28 +183,56 @@ async function searchWeb(query, options = {}) {
         return true;
       } catch { return false; }
     })
-    .slice(0, 5)
-    .map((x, i) => ({number:i+1,title:cleanText(x.title).slice(0,240),url:x.url.slice(0,1500),snippet:cleanText(x.content||x.description||x.snippet||"").slice(0,700),image:(typeof x.thumbnail==="string"&&x.thumbnail.startsWith("https://")?x.thumbnail:typeof x.img_src==="string"&&x.img_src.startsWith("https://")?x.img_src:"")}))
+    .slice(0, options.recent ? 12 : 5)
+    .map((x, i) => ({number:i+1,title:cleanText(x.title).slice(0,240),url:x.url.slice(0,1500),snippet:cleanText(x.content||x.description||x.snippet||"").slice(0,700),publishedDate:"",image:(typeof x.thumbnail==="string"&&x.thumbnail.startsWith("https://")?x.thumbnail:typeof x.img_src==="string"&&x.img_src.startsWith("https://")?x.img_src:"")}))
     .filter(x => x.title && x.url);
 
-  // Verifica i link prima di passarli al modello: esclude gli URL che rispondono chiaramente 404/410.
-  // Se un sito blocca i controlli automatici, conserviamo il risultato invece di scartare una fonte potenzialmente valida.
+  const parsePublishedDate = html => {
+    const patterns = [
+      /<meta[^>]+(?:property|name)=["']article:published_time["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']article:published_time["']/i,
+      /<meta[^>]+(?:name|property)=["'](?:datePublished|datepublished|pubdate|publish-date|date)["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["'](?:datePublished|datepublished|pubdate|publish-date|date)["']/i,
+      /["']datePublished["']\s*:\s*["']([^"']+)["']/i,
+      /["']dateCreated["']\s*:\s*["']([^"']+)["']/i,
+      /<time[^>]+datetime=["']([^"']+)["']/i
+    ];
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match) {
+        const date = new Date(match[1]);
+        if (!Number.isNaN(date.getTime()) && date.getFullYear() >= 2000 && date.getTime() <= Date.now() + 24 * 60 * 60 * 1000) return date;
+      }
+    }
+    return null;
+  };
+
+  // Verifica URL, disponibilità e data editoriale prima di usare una fonte.
   const verifyResults = async results => {
     const checked = await Promise.all((Array.isArray(results) ? results : []).map(async item => {
       try {
         const response = await fetch(item.url, {
           method: "GET",
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)", "Range": "bytes=0-1023" },
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36" },
           redirect: "follow",
-          signal: AbortSignal.timeout(4500)
+          signal: AbortSignal.timeout(options.recent ? 6500 : 4500)
         });
-        if (response.status === 404 || response.status === 410) {
-          console.warn("Link non valido escluso dalla ricerca:", item.url, response.status);
-          return null;
-        }
+        if (response.status === 404 || response.status === 410 || !response.ok) return null;
         if (response.url && /^https?:\/\//i.test(response.url)) item.url = response.url;
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("text/html")) return options.recent ? null : item;
+        const html = (await response.text()).slice(0, 1500000);
+        if (options.recent) {
+          const published = parsePublishedDate(html);
+          if (!published || published.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000 || published.getTime() > Date.now() + 24 * 60 * 60 * 1000) {
+            console.warn("Notizia esclusa: data assente, non verificabile o fuori intervallo:", item.url);
+            return null;
+          }
+          item.publishedDate = published.toISOString().slice(0, 10);
+        }
         return item;
       } catch {
+        if (options.recent) return null;
         return item;
       }
     }));
@@ -239,7 +267,7 @@ async function searchWeb(query, options = {}) {
   // Fallback gratuito senza API key: pagina HTML pubblica di DuckDuckGo.
   try {
     const url = new URL("https://html.duckduckgo.com/html/");
-    url.searchParams.set("q", query.slice(0, 400));
+    url.searchParams.set("q", (options.recent ? query + " past week" : query).slice(0, 400));
     const response = await fetch(url, {
       headers: {
         Accept: "text/html",
@@ -252,7 +280,7 @@ async function searchWeb(query, options = {}) {
     const results = [];
     const blocks = html.split(/<div[^>]+class="result\b/i).slice(1);
     for (const block of blocks) {
-      if (results.length >= 5) break;
+      if (results.length >= (options.recent ? 12 : 5)) break;
       const linkMatch = block.match(/<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
       if (!linkMatch) continue;
       let resultUrl = linkMatch[1].replace(/&amp;/g, "&");
@@ -334,8 +362,11 @@ app.post("/api/chat", async (req, res) => {
         const lastUser = [...validMessages].reverse().find(m => m.role === "user");
         const query = lastUser.content;
         const asksNews = /notizie|news|ultime|novit[aà]|sviluppi|ultimi\s+\d+\s+giorni/i.test(query);
+        const now = new Date();
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const dateLabel = date => date.toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric", timeZone: "Europe/Rome" });
         const searchQuery = asksNews
-          ? query + " articoli di notizie pubblicati negli ultimi 7 giorni data di pubblicazione -tag -categoria"
+          ? query + " articoli originali pubblicati dal " + dateLabel(sevenDaysAgo) + " al " + dateLabel(now) + " data pubblicazione articolo -tag -categoria"
           : query;
         webResults = await searchWeb(searchQuery, { recent: asksNews });
       } catch (error) {
@@ -356,11 +387,11 @@ app.post("/api/chat", async (req, res) => {
       }).map((source, index) => ({ ...source, number: index + 1 }));
     }
     const webContext = webResults.length
-      ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\nURL: " + x.url + "\nEstratto: " + x.snippet + (x.image ? "\nImmagine: " + x.image : "")).join("\n\n")
+      ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\nURL: " + x.url + (x.publishedDate ? "\nData pubblicazione verificata: " + x.publishedDate : "") + "\nEstratto: " + x.snippet + (x.image ? "\nImmagine: " + x.image : "")).join("\n\n")
       : "";
     const systemContent = [
       "Sei Lumia AI, un assistente intelligente. Rispondi in italiano in modo chiaro, utile e rispettoso.",
-      webResults.length ? "FORMATO RISPOSTA CON RICERCA WEB: crea una rassegna giornalistica ben impaginata, non un muro di testo. Usa Markdown semplice perché l’interfaccia lo renderizza in titoli, elenchi e link. Inizia con una sola intestazione breve con emoji pertinente (es. 📰), poi una riga con periodo cercato e una breve sintesi generale. Raggruppa le notizie in massimo 3 sezioni con emoji sobrie (es. 🚀 Tecnologia, 🌍 Impatto, 🛡️ Sicurezza), evitando categorie inutili. Per ogni notizia usa un titolo breve e specifico, data e testata solo se disponibili, poi un riassunto chiaro di 2-4 frasi. Unisci notizie duplicate sullo stesso evento. Aggiungi immagini solo se i risultati web forniscono un URL immagine esplicito e sicuro: usa la sintassi Markdown ![descrizione](URL); non inventare URL né usare immagini decorative generiche. I richiami alle fonti vanno accanto alla notizia. Alla fine crea una sezione 📚 Fonti con elenco ordinato di soli articoli effettivamente citati, link cliccabili con nome della testata e titolo specifico; niente URL grezzi e niente pagine-categoria se esistono fonti articolo. Non usare una lista separata di fonti non citate. Usa esclusivamente titoli, URL e dettagli ricevuti. Copia ogni URL esattamente come compare nei risultati web: non ricostruire, correggere, accorciare o inventare indirizzi. Non inventare fatti, date o fonti. Escludi pagine-categoria, tag, home page e pagine di raccolta dalle notizie: ogni fonte deve puntare direttamente a un articolo specifico. Se i risultati contengono soltanto pagine generiche o non mostrano date verificabili, non trasformarli in notizie e non riempire le sezioni con informazioni generali: dichiara che non ci sono abbastanza articoli verificabili. Non inventare un finanziamento, una cifra, un evento o una data partendo dal solo titolo di una categoria. Se l’URL contiene un anno o una data precedente al periodo richiesto, non presentarlo come recente. Se non hai una data verificabile, non dichiarare che l’articolo è degli ultimi 7 giorni. Se non trovi almeno 2 notizie specifiche, recenti e supportate, dichiaralo in modo conciso." : "",
+      webResults.length ? "FORMATO RISPOSTA CON RICERCA WEB: crea una rassegna giornalistica ben impaginata, non un muro di testo. Usa Markdown semplice perché l’interfaccia lo renderizza in titoli, elenchi e link. Inizia con una sola intestazione breve con emoji pertinente (es. 📰), poi una riga con periodo cercato e una breve sintesi generale. Raggruppa le notizie in massimo 3 sezioni con emoji sobrie (es. 🚀 Tecnologia, 🌍 Impatto, 🛡️ Sicurezza), evitando categorie inutili. Per ogni notizia usa un titolo breve e specifico, data e testata solo se disponibili, poi un riassunto chiaro di 2-4 frasi. Unisci notizie duplicate sullo stesso evento. Aggiungi immagini solo se i risultati web forniscono un URL immagine esplicito e sicuro: usa la sintassi Markdown ![descrizione](URL); non inventare URL né usare immagini decorative generiche. I richiami alle fonti vanno accanto alla notizia. Alla fine crea una sezione 📚 Fonti con elenco ordinato di soli articoli effettivamente citati, link cliccabili con nome della testata e titolo specifico; niente URL grezzi e niente pagine-categoria se esistono fonti articolo. Non usare una lista separata di fonti non citate. Usa esclusivamente titoli, URL e dettagli ricevuti. Copia ogni URL esattamente come compare nei risultati web: non ricostruire, correggere, accorciare o inventare indirizzi. Non inventare fatti, date o fonti. Escludi pagine-categoria, tag, home page e pagine di raccolta dalle notizie: ogni fonte deve puntare direttamente a un articolo specifico. Per una richiesta sugli ultimi 7 giorni, considera utilizzabili esclusivamente risultati con il campo "Data pubblicazione verificata" fornito dal server; non usare articoli senza tale campo, anche se il motore di ricerca li presenta come recenti. Se i risultati contengono soltanto pagine generiche o non mostrano date verificabili, non trasformarli in notizie e non riempire le sezioni con informazioni generali: dichiara che non ci sono abbastanza articoli verificabili. Non inventare date sulla base del titolo, dello snippet o dell’URL. Non inventare un finanziamento, una cifra, un evento o una data partendo dal solo titolo di una categoria. Se l’URL contiene un anno o una data precedente al periodo richiesto, non presentarlo come recente. Se non hai una data verificabile, non dichiarare che l’articolo è degli ultimi 7 giorni. Se non trovi almeno 2 notizie specifiche, recenti e supportate, dichiaralo in modo conciso." : "",
       webSearchFailed ? "La ricerca web non è riuscita. Non affermare di aver cercato e non inventare fonti; spiega il limite se servono informazioni aggiornate." : "",
       !webResults.length && !webSearchFailed && shouldSearchWeb(validMessages) ? "La ricerca web non ha trovato risultati utilizzabili. Non inventare fonti e dichiara il limite." : "",
       "IDENTITÀ DI LUMIA: sei Lumia AI, un progetto creato e programmato da Davide, che ha realizzato personalmente l'applicazione e ne cura lo sviluppo. Se ti chiedono chi sei, chi ti ha creato o chi ti ha programmato, spiega con naturalezza che sei Lumia AI, l'assistente sviluppato e programmato da Davide. Puoi dire, per esempio, \"Ciao! Sono Lumia AI, l'assistente che Davide ha creato e programmato personalmente. Piacere di conoscerti!\" ma varia la formulazione in base alla conversazione: non ripetere sempre la stessa frase e non presentarti in modo lungo a ogni semplice saluto. Se l'utente dice solo \"ciao\", rispondi in modo breve e amichevole; puoi aggiungere una breve menzione a Davide quando suona naturale. Se ti chiedono dettagli tecnici non confermati su come sei stato costruito o addestrato, non inventarli: distingui il progetto/applicazione sviluppato da Davide dal modello AI utilizzato dal servizio. Non sostenere che Davide abbia creato da zero il modello di base se non è confermato.",
