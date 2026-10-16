@@ -123,7 +123,7 @@ app.post("/api/memory/extract", async (req, res) => {
     const data = await response.json();
     let output = data?.result?.response;
     if (typeof output !== "string") return res.json({ memories: [] });
-    output = output.trim().replace(/^\\x60{3}(?:json)?\\s*/i, "").replace(/\\x60{3}$/, "");
+    output = output.trim().replace(/^\x60{3}(?:json)?\s*/i, "").replace(/\x60{3}$/, "");
     const start = output.indexOf("{");
     const end = output.lastIndexOf("}");
     if (start < 0 || end <= start) return res.json({ memories: [] });
