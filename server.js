@@ -111,19 +111,19 @@ app.post("/api/memory/extract", async (req, res) => {
     const response = await callCloudflare([
       {
         role: "system",
-        content: "Sei il modulo di memoria di Lumia AI. Estrai al massimo 3 fatti stabili e utili per personalizzare conversazioni future: preferenze di risposta, progetti in corso, strumenti che l'utente usa, obiettivi continuativi. NON memorizzare dati sensibili o intimi, salute, credenziali, indirizzi, numeri di telefono, dati finanziari, informazioni su terze persone, contenuti casuali, domande isolate o ipotesi. Non trasformare domande in fatti. Non dedurre dettagli non espliciti. Se non c'è nulla di utile, restituisci un array vuoto. Considera i ricordi esistenti e restituisci solo nuovi fatti non duplicati. Rispondi esclusivamente con JSON valido nel formato {\\"memories\\":[\\"fatto\\"]}, senza markdown."
+        content: "Sei il modulo di memoria di Lumia AI. Estrai al massimo 3 fatti stabili e utili per personalizzare conversazioni future: preferenze di risposta, progetti in corso, strumenti che l'utente usa, obiettivi continuativi. NON memorizzare dati sensibili o intimi, salute, credenziali, indirizzi, numeri di telefono, dati finanziari, informazioni su terze persone, contenuti casuali, domande isolate o ipotesi. Non trasformare domande in fatti. Non dedurre dettagli non espliciti. Se non c'è nulla di utile, restituisci un array vuoto. Considera i ricordi esistenti e restituisci solo nuovi fatti non duplicati. Rispondi esclusivamente con JSON valido nel formato {\"memories\":[\"fatto\"]}, senza markdown."
       },
       {
         role: "user",
-        content: "RICORDI ESISTENTI:\\n" + (existing.length ? existing.map(x => "- " + x).join("\\n") : "(nessuno)") +
-          "\\n\\nCONVERSAZIONE RECENTE:\\n" + messages.map(m => (m.role === "user" ? "Utente" : "Lumia") + ": " + m.content).join("\\n")
+        content: "RICORDI ESISTENTI:\n" + (existing.length ? existing.map(x => "- " + x).join("\n") : "(nessuno)") +
+          "\n\nCONVERSAZIONE RECENTE:\n" + messages.map(m => (m.role === "user" ? "Utente" : "Lumia") + ": " + m.content).join("\n")
       }
     ], { max_tokens: 300, temperature: 0.1, timeout: 30000 });
 
     const data = await response.json();
     let output = data?.result?.response;
     if (typeof output !== "string") return res.json({ memories: [] });
-    output = output.trim().replace(/^\`\`\`(?:json)?\\s*/i, "").replace(/\`\`\`$/, "");
+    output = output.trim().replace(/^\\x60{3}(?:json)?\\s*/i, "").replace(/\\x60{3}$/, "");
     const start = output.indexOf("{");
     const end = output.lastIndexOf("}");
     if (start < 0 || end <= start) return res.json({ memories: [] });
