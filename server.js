@@ -159,18 +159,37 @@ function shouldSearchWeb(messages) {
 }
 
 async function searchWeb(query) {
-  const url = new URL(SEARXNG_URL + "/search");
-  url.searchParams.set("q", query.slice(0, 400));
-  url.searchParams.set("format", "json");
-  url.searchParams.set("language", "it-IT");
-  const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(10000) });
-  if (!response.ok) throw new Error("HTTP " + response.status);
-  const data = await response.json();
-  return (Array.isArray(data.results) ? data.results : [])
-    .filter(x => x && typeof x.title === "string" && typeof x.url === "string" &&
-      (x.url.startsWith("https://") || x.url.startsWith("http://")))
-    .slice(0, 5)
-    .map((x, i) => ({number:i+1,title:x.title.slice(0,240),url:x.url.slice(0,1500),snippet:String(x.content||x.description||"").slice(0,700)}));
+  const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
+  let lastError;
+
+  for (const instance of instances) {
+    try {
+      const url = new URL(instance + "/search");
+      url.searchParams.set("q", query.slice(0, 400));
+      url.searchParams.set("format", "json");
+      url.searchParams.set("language", "it");
+      const response = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": "LumiaAI/1.0 (web search)" },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status + " da " + instance);
+      const data = await response.json();
+      const results = (Array.isArray(data.results) ? data.results : [])
+        .filter(x => x && typeof x.title === "string" && typeof x.url === "string" &&
+          (x.url.startsWith("https://") || x.url.startsWith("http://")))
+        .slice(0, 5)
+        .map((x, i) => ({number:i+1,title:x.title.slice(0,240),url:x.url.slice(0,1500),snippet:String(x.content||x.description||"").slice(0,700)}));
+      if (results.length) {
+        console.log("Ricerca web riuscita tramite:", instance, "- risultati:", results.length);
+        return results;
+      }
+      lastError = new Error("Nessun risultato JSON da " + instance);
+    } catch (error) {
+      lastError = error;
+      console.warn("Istanza ricerca web non disponibile:", instance, error.message);
+    }
+  }
+  throw lastError || new Error("Nessuna istanza di ricerca web disponibile");
 }
 
 /* Chat AI con streaming testuale. */
