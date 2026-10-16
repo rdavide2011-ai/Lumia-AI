@@ -488,7 +488,7 @@ app.post("/api/chat", async (req, res) => {
       : "";
     // Fail closed: non lasciare che il modello ricicli notizie vecchie quando
     // mancano almeno due articoli con data editoriale verificata negli ultimi 7 giorni.
-    if (isNewsRequest && webResults.filter(source => /^\\d{4}-\\d{2}-\\d{2}$/.test(source.publishedDate || "")).length < 2) {
+    if (isNewsRequest && webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).length < 2) {
       console.warn("Rassegna notizie interrotta: meno di due articoli recenti con data verificata.");
       res.status(200);
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
