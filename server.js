@@ -159,9 +159,22 @@ function shouldSearchWeb(messages) {
 }
 
 async function searchWeb(query) {
-  const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
-  let lastError;
+  const cleanText = value => String(value || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/\s+/g, " ").trim();
 
+  const normalizeResults = results => (Array.isArray(results) ? results : [])
+    .filter(x => x && typeof x.title === "string" && typeof x.url === "string" &&
+      (x.url.startsWith("https://") || x.url.startsWith("http://")))
+    .slice(0, 5)
+    .map((x, i) => ({number:i+1,title:cleanText(x.title).slice(0,240),url:x.url.slice(0,1500),snippet:cleanText(x.content||x.description||x.snippet||"").slice(0,700)}))
+    .filter(x => x.title && x.url);
+
+  const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
   for (const instance of instances) {
     try {
       const url = new URL(instance + "/search");
@@ -169,27 +182,66 @@ async function searchWeb(query) {
       url.searchParams.set("format", "json");
       url.searchParams.set("language", "it");
       const response = await fetch(url, {
-        headers: { Accept: "application/json", "User-Agent": "LumiaAI/1.0 (web search)" },
-        signal: AbortSignal.timeout(8000)
+        headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
+        signal: AbortSignal.timeout(6000)
       });
-      if (!response.ok) throw new Error("HTTP " + response.status + " da " + instance);
+      if (!response.ok) throw new Error("HTTP " + response.status);
       const data = await response.json();
-      const results = (Array.isArray(data.results) ? data.results : [])
-        .filter(x => x && typeof x.title === "string" && typeof x.url === "string" &&
-          (x.url.startsWith("https://") || x.url.startsWith("http://")))
-        .slice(0, 5)
-        .map((x, i) => ({number:i+1,title:x.title.slice(0,240),url:x.url.slice(0,1500),snippet:String(x.content||x.description||"").slice(0,700)}));
+      const results = normalizeResults(data.results);
       if (results.length) {
-        console.log("Ricerca web riuscita tramite:", instance, "- risultati:", results.length);
+        console.log("Ricerca web riuscita tramite SearXNG:", instance, "- risultati:", results.length);
         return results;
       }
-      lastError = new Error("Nessun risultato JSON da " + instance);
+      throw new Error("Nessun risultato utilizzabile");
     } catch (error) {
-      lastError = error;
-      console.warn("Istanza ricerca web non disponibile:", instance, error.message);
+      console.warn("SearXNG non disponibile:", instance, error.message);
     }
   }
-  throw lastError || new Error("Nessuna istanza di ricerca web disponibile");
+
+  // Fallback gratuito senza API key: pagina HTML pubblica di DuckDuckGo.
+  try {
+    const url = new URL("https://html.duckduckgo.com/html/");
+    url.searchParams.set("q", query.slice(0, 400));
+    const response = await fetch(url, {
+      headers: {
+        Accept: "text/html",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+      },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const html = await response.text();
+    const results = [];
+    const blocks = html.split(/<div[^>]+class="result\b/i).slice(1);
+    for (const block of blocks) {
+      if (results.length >= 5) break;
+      const linkMatch = block.match(/<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+      if (!linkMatch) continue;
+      let resultUrl = linkMatch[1].replace(/&amp;/g, "&");
+      try {
+        const parsedUrl = new URL(resultUrl, "https://html.duckduckgo.com");
+        if (parsedUrl.hostname.includes("duckduckgo.com") && parsedUrl.searchParams.has("uddg")) {
+          resultUrl = parsedUrl.searchParams.get("uddg");
+        }
+      } catch {}
+      if (!/^https?:\/\//i.test(resultUrl)) continue;
+      const snippetMatch = block.match(/<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>|<td[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/td>/i);
+      results.push({
+        number: results.length + 1,
+        title: cleanText(linkMatch[2]).slice(0, 240),
+        url: resultUrl.slice(0, 1500),
+        snippet: cleanText(snippetMatch?.[1] || snippetMatch?.[2] || "").slice(0, 700)
+      });
+    }
+    if (results.length) {
+      console.log("Ricerca web riuscita tramite DuckDuckGo HTML - risultati:", results.length);
+      return results;
+    }
+    throw new Error("DuckDuckGo non ha restituito risultati estraibili");
+  } catch (error) {
+    console.warn("Fallback DuckDuckGo non disponibile:", error.message);
+    throw error;
+  }
 }
 
 /* Chat AI con streaming testuale. */
