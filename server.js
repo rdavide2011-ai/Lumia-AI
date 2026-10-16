@@ -306,6 +306,14 @@ async function searchWeb(query, options = {}) {
         });
         if (!rssResponse.ok) throw new Error("Google News RSS HTTP " + rssResponse.status);
         const rss = await rssResponse.text();
+        const itemBlocks = rss.split(/<item\b[^>]*>/i).slice(1);
+        console.log("Google News RSS diagnostica:", JSON.stringify({
+          query: rssQuery.slice(0, 140),
+          status: rssResponse.status,
+          contentType: rssResponse.headers.get("content-type") || "",
+          bytes: rss.length,
+          itemBlocks: itemBlocks.length
+        }));
         for (const block of rss.split(/<item\b[^>]*>/i).slice(1)) {
           if (rssItems.length >= 10) break;
           const item = block.split(/<\/item>/i)[0];
@@ -504,7 +512,11 @@ app.post("/api/chat", async (req, res) => {
     // Fail closed: non lasciare che il modello ricicli notizie vecchie quando
     // mancano almeno due articoli con data editoriale verificata negli ultimi 7 giorni.
     if (isNewsRequest && webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).length < 2) {
-      console.warn("Rassegna notizie interrotta: meno di due articoli recenti con data verificata.");
+      console.warn("Rassegna notizie interrotta: meno di due articoli recenti con data verificata.", JSON.stringify({
+        results: webResults.length,
+        dated: webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).length,
+        sources: webResults.map(source => ({ title: source.title, publishedDate: source.publishedDate || null, url: source.url }))
+      }));
       res.status(200);
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
