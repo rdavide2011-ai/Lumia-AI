@@ -336,6 +336,7 @@ async function searchWeb(query, options = {}) {
     throw new Error("Nessun risultato verificabile dai motori di ricerca");
   } catch (error) {
     console.warn("Fallback DuckDuckGo non disponibile:", error.message);
+    if (collected.length) return mergeResults([]);
     throw error;
   }
 }
