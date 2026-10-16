@@ -159,7 +159,7 @@ function shouldSearchWeb(messages) {
   return triggers.some(term => q.includes(term));
 }
 
-async function searchWeb(query) {
+async function searchWeb(query, options = {}) {
   const cleanText = value => String(value || "")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -215,9 +215,10 @@ async function searchWeb(query) {
   for (const instance of instances) {
     try {
       const url = new URL(instance + "/search");
-      url.searchParams.set("q", query.slice(0, 400));
+      url.searchParams.set("q", (options.recent ? query + " past week" : query).slice(0, 400));
       url.searchParams.set("format", "json");
       url.searchParams.set("language", "it");
+      if (options.recent) url.searchParams.set("time_range", "week");
       const response = await fetch(url, {
         headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
         signal: AbortSignal.timeout(6000)
@@ -334,9 +335,9 @@ app.post("/api/chat", async (req, res) => {
         const query = lastUser.content;
         const asksNews = /notizie|news|ultime|novit[aà]|sviluppi|ultimi\s+\d+\s+giorni/i.test(query);
         const searchQuery = asksNews
-          ? query + " articoli specifici pubblicati negli ultimi giorni data di pubblicazione ottobre 2026 -tag -categoria"
+          ? query + " articoli di notizie pubblicati negli ultimi 7 giorni data di pubblicazione -tag -categoria"
           : query;
-        webResults = await searchWeb(searchQuery);
+        webResults = await searchWeb(searchQuery, { recent: asksNews });
       } catch (error) {
         console.warn("Ricerca web non disponibile:", error.message);
         webSearchFailed = true;
