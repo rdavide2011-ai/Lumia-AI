@@ -1,0 +1,37 @@
+name: Lumia AI checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  server-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check JavaScript syntax
+        run: node --check server.js
+      - name: Start server and smoke-test health endpoint
+        run: |
+          PORT=3333 node server.js > /tmp/lumia-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:3333/api/health > /tmp/lumia-health.json; then
+              break
+            fi
+            sleep 1
+          done
+          cat /tmp/lumia-health.json
+          node -e "const fs=require('fs'); const d=JSON.parse(fs.readFileSync('/tmp/lumia-health.json','utf8')); if(d.status!=='online') process.exit(1)"
