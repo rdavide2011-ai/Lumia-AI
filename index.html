@@ -582,7 +582,7 @@ function getAutomaticMemories(){
 }
 function renderAutomaticMemories(){
   $("automaticMemoryEnabled").checked=settings.automaticMemoryEnabled!==false;
-  $("automaticMemories").value=getAutomaticMemories().join("\\n");
+  $("automaticMemories").value=getAutomaticMemories().join("\n");
 }
 function updateMemoryStats(){
   const count=conversations.length;
