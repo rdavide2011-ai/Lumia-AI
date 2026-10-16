@@ -183,26 +183,31 @@ async function searchWeb(query, options = {}) {
         return true;
       } catch { return false; }
     })
-    .slice(0, options.recent ? 12 : 5)
+    .slice(0, options.recent ? 20 : 5)
     .map((x, i) => ({number:i+1,title:cleanText(x.title).slice(0,240),url:x.url.slice(0,1500),snippet:cleanText(x.content||x.description||x.snippet||"").slice(0,700),publishedDate:"",image:(typeof x.thumbnail==="string"&&x.thumbnail.startsWith("https://")?x.thumbnail:typeof x.img_src==="string"&&x.img_src.startsWith("https://")?x.img_src:"")}))
     .filter(x => x.title && x.url);
 
   const parsePublishedDate = html => {
-    const patterns = [
-      /<meta[^>]+(?:property|name)=["']article:published_time["'][^>]+content=["']([^"']+)["']/i,
-      /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']article:published_time["']/i,
-      /<meta[^>]+(?:name|property)=["'](?:datePublished|datepublished|pubdate|publish-date|date)["'][^>]+content=["']([^"']+)["']/i,
-      /<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["'](?:datePublished|datepublished|pubdate|publish-date|date)["']/i,
-      /["']datePublished["']\s*:\s*["']([^"']+)["']/i,
-      /["']dateCreated["']\s*:\s*["']([^"']+)["']/i,
-      /<time[^>]+datetime=["']([^"']+)["']/i
+    // Cerca prima la data editoriale dichiarata, non la data di aggiornamento del sito.
+    const priorityPatterns = [
+      /<meta\\b[^>]*(?:property|name)=["']article:published_time["'][^>]*content=["']([^"']+)["'][^>]*>/gi,
+      /<meta\\b[^>]*content=["']([^"']+)["'][^>]*(?:property|name)=["']article:published_time["'][^>]*>/gi,
+      /<meta\\b[^>]*(?:name|property|itemprop)=["'](?:datePublished|datepublished|pubdate|publish-date)["'][^>]*content=["']([^"']+)["'][^>]*>/gi,
+      /<meta\\b[^>]*content=["']([^"']+)["'][^>]*(?:name|property|itemprop)=["'](?:datePublished|datepublished|pubdate|publish-date)["'][^>]*>/gi,
+      /["']datePublished["']\\s*:\\s*["']([^"']+)["']/gi,
+      /<time\\b[^>]*datetime=["']([^"']+)["'][^>]*>/gi
     ];
-    for (const pattern of patterns) {
-      const match = html.match(pattern);
-      if (match) {
+    const dates = [];
+    for (const pattern of priorityPatterns) {
+      for (const match of html.matchAll(pattern)) {
         const date = new Date(match[1]);
-        if (!Number.isNaN(date.getTime()) && date.getFullYear() >= 2000 && date.getTime() <= Date.now() + 24 * 60 * 60 * 1000) return date;
+        if (!Number.isNaN(date.getTime()) && date.getFullYear() >= 2000 &&
+            date.getTime() <= Date.now() + 24 * 60 * 60 * 1000) {
+          dates.push(date);
+        }
       }
+      // Le fonti editoriali prioritarie prevalgono sui tag generici <time>.
+      if (dates.length) return dates[0];
     }
     return null;
   };
@@ -246,7 +251,7 @@ async function searchWeb(query, options = {}) {
       url.searchParams.set("q", (options.recent ? query + " past week" : query).slice(0, 400));
       url.searchParams.set("format", "json");
       url.searchParams.set("language", "it");
-      if (options.recent) url.searchParams.set("time_range", "week");
+      if (options.recent) { url.searchParams.set("time_range", "week"); url.searchParams.set("categories", "news"); }
       const response = await fetch(url, {
         headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
         signal: AbortSignal.timeout(6000)
