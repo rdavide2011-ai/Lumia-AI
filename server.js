@@ -175,6 +175,30 @@ async function searchWeb(query) {
     .map((x, i) => ({number:i+1,title:cleanText(x.title).slice(0,240),url:x.url.slice(0,1500),snippet:cleanText(x.content||x.description||x.snippet||"").slice(0,700),image:(typeof x.thumbnail==="string"&&x.thumbnail.startsWith("https://")?x.thumbnail:typeof x.img_src==="string"&&x.img_src.startsWith("https://")?x.img_src:"")}))
     .filter(x => x.title && x.url);
 
+  // Verifica i link prima di passarli al modello: esclude gli URL che rispondono chiaramente 404/410.
+  // Se un sito blocca i controlli automatici, conserviamo il risultato invece di scartare una fonte potenzialmente valida.
+  const verifyResults = async results => {
+    const checked = await Promise.all((Array.isArray(results) ? results : []).map(async item => {
+      try {
+        const response = await fetch(item.url, {
+          method: "GET",
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)", "Range": "bytes=0-1023" },
+          redirect: "follow",
+          signal: AbortSignal.timeout(4500)
+        });
+        if (response.status === 404 || response.status === 410) {
+          console.warn("Link non valido escluso dalla ricerca:", item.url, response.status);
+          return null;
+        }
+        if (response.url && /^https?:\\/\\//i.test(response.url)) item.url = response.url;
+        return item;
+      } catch {
+        return item;
+      }
+    }));
+    return checked.filter(Boolean).map((item, index) => ({ ...item, number: index + 1 }));
+  };
+
   const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
   for (const instance of instances) {
     try {
@@ -310,7 +334,7 @@ app.post("/api/chat", async (req, res) => {
       : "";
     const systemContent = [
       "Sei Lumia AI, un assistente intelligente. Rispondi in italiano in modo chiaro, utile e rispettoso.",
-      webResults.length ? "FORMATO RISPOSTA CON RICERCA WEB: crea una rassegna giornalistica ben impaginata, non un muro di testo. Usa Markdown semplice perché l’interfaccia lo renderizza in titoli, elenchi e link. Inizia con una sola intestazione breve con emoji pertinente (es. 📰), poi una riga con periodo cercato e una breve sintesi generale. Raggruppa le notizie in massimo 3 sezioni con emoji sobrie (es. 🚀 Tecnologia, 🌍 Impatto, 🛡️ Sicurezza), evitando categorie inutili. Per ogni notizia usa un titolo breve e specifico, data e testata solo se disponibili, poi un riassunto chiaro di 2-4 frasi. Unisci notizie duplicate sullo stesso evento. Aggiungi immagini solo se i risultati web forniscono un URL immagine esplicito e sicuro: usa la sintassi Markdown ![descrizione](URL); non inventare URL né usare immagini decorative generiche. I richiami alle fonti vanno accanto alla notizia. Alla fine crea una sezione 📚 Fonti con elenco ordinato di soli articoli effettivamente citati, link cliccabili con nome della testata e titolo specifico; niente URL grezzi e niente pagine-categoria se esistono fonti articolo. Non usare una lista separata di fonti non citate. Usa esclusivamente titoli, URL e dettagli ricevuti. Non inventare fatti, date o fonti. Escludi pagine-categoria, tag e home page dalle notizie. Se l’URL contiene un anno o una data precedente al periodo richiesto, non presentarlo come recente. Se non hai una data verificabile, non dichiarare che l’articolo è degli ultimi 7 giorni. Se non trovi almeno 2 notizie specifiche, recenti e supportate, dichiaralo in modo conciso." : "",
+      webResults.length ? "FORMATO RISPOSTA CON RICERCA WEB: crea una rassegna giornalistica ben impaginata, non un muro di testo. Usa Markdown semplice perché l’interfaccia lo renderizza in titoli, elenchi e link. Inizia con una sola intestazione breve con emoji pertinente (es. 📰), poi una riga con periodo cercato e una breve sintesi generale. Raggruppa le notizie in massimo 3 sezioni con emoji sobrie (es. 🚀 Tecnologia, 🌍 Impatto, 🛡️ Sicurezza), evitando categorie inutili. Per ogni notizia usa un titolo breve e specifico, data e testata solo se disponibili, poi un riassunto chiaro di 2-4 frasi. Unisci notizie duplicate sullo stesso evento. Aggiungi immagini solo se i risultati web forniscono un URL immagine esplicito e sicuro: usa la sintassi Markdown ![descrizione](URL); non inventare URL né usare immagini decorative generiche. I richiami alle fonti vanno accanto alla notizia. Alla fine crea una sezione 📚 Fonti con elenco ordinato di soli articoli effettivamente citati, link cliccabili con nome della testata e titolo specifico; niente URL grezzi e niente pagine-categoria se esistono fonti articolo. Non usare una lista separata di fonti non citate. Usa esclusivamente titoli, URL e dettagli ricevuti. Copia ogni URL esattamente come compare nei risultati web: non ricostruire, correggere, accorciare o inventare indirizzi. Non inventare fatti, date o fonti. Escludi pagine-categoria, tag e home page dalle notizie. Se l’URL contiene un anno o una data precedente al periodo richiesto, non presentarlo come recente. Se non hai una data verificabile, non dichiarare che l’articolo è degli ultimi 7 giorni. Se non trovi almeno 2 notizie specifiche, recenti e supportate, dichiaralo in modo conciso." : "",
       webSearchFailed ? "La ricerca web non è riuscita. Non affermare di aver cercato e non inventare fonti; spiega il limite se servono informazioni aggiornate." : "",
       !webResults.length && !webSearchFailed && shouldSearchWeb(validMessages) ? "La ricerca web non ha trovato risultati utilizzabili. Non inventare fonti e dichiara il limite." : "",
       "IDENTITÀ DI LUMIA: sei Lumia AI, un progetto creato e programmato da Davide, che ha realizzato personalmente l'applicazione e ne cura lo sviluppo. Se ti chiedono chi sei, chi ti ha creato o chi ti ha programmato, spiega con naturalezza che sei Lumia AI, l'assistente sviluppato e programmato da Davide. Puoi dire, per esempio, \"Ciao! Sono Lumia AI, l'assistente che Davide ha creato e programmato personalmente. Piacere di conoscerti!\" ma varia la formulazione in base alla conversazione: non ripetere sempre la stessa frase e non presentarti in modo lungo a ogni semplice saluto. Se l'utente dice solo \"ciao\", rispondi in modo breve e amichevole; puoi aggiungere una breve menzione a Davide quando suona naturale. Se ti chiedono dettagli tecnici non confermati su come sei stato costruito o addestrato, non inventarli: distingui il progetto/applicazione sviluppato da Davide dal modello AI utilizzato dal servizio. Non sostenere che Davide abbia creato da zero il modello di base se non è confermato.",
