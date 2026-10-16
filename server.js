@@ -324,7 +324,14 @@ async function searchWeb(query, options = {}) {
           const genericEndings = /^(?:ultime-notizie|notizie|news|tag|tags|argomenti|categoria|category|topic|topics|intelligenza-artificiale|artificial-intelligence|ai|ricerca|tecnologia|tecnologie|innovazione|innovation|feed|search|home|index|page-?\d*|ai-news-today)$/i;
           if (!parts.length || genericEndings.test(last)) return false;
           if (/\/(?:tag|tags|categoria|category|argomenti|topics?|search|feed)\//i.test(path)) return false;
+          // Blocca landing page e pagine-categoria che i motori possono scambiare per articoli.
+          const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+          if (host === "theguardian.com" && /^\/technology\/artificialintelligenceai\/?$/i.test(path)) return false;
+          if (host === "dw.com" && /^\/en\/artificial-intelligence\/t-\d+\/?$/i.test(path)) return false;
+          if (/\/(?:artificial-intelligence|intelligenza-artificiale|ai)\/?$/i.test(path)) return false;
           if (item.title.length < 18 || item.snippet.length < 45) return false;
+          if (options.recent && /(?:show more|skip next section|advertisement|in the spotlight|ultimi articoli|più letti)/i.test(item.snippet) &&
+              item.snippet.length > 900) return false;
         } catch { return false; }
         return true;
       });
@@ -625,10 +632,16 @@ app.post("/api/chat", async (req, res) => {
         let publisher = "";
         try { publisher = new URL(source.url).hostname.replace(/^www\./i, ""); } catch {}
         const dateType = source.dateSource === "Tavily" ? "data riportata dal motore di ricerca" : "data rilevata nella pagina";
+        const cleanSnippet = String(source.snippet || "")
+          .replace(/\s+/g, " ")
+          .replace(/(?:Show more|Advertisement|Skip next section|In the spotlight)[\s\S]*$/i, "")
+          .replace(/(?:Ultimi articoli|Più letti|Home Notizie)[\s\S]*$/i, "")
+          .trim()
+          .slice(0, 650);
         return "### " + source.title + "\n" +
           "**Data:** " + dateLabel(source.publishedDate) + " (" + dateType + ")" +
           (publisher ? " · **Fonte:** " + publisher : "") + "\n\n" +
-          (source.snippet || "Nessun estratto disponibile.") +
+          (cleanSnippet || "L’estratto disponibile non è sufficiente per riassumere l’articolo in modo affidabile.") +
           "\n\n[Leggi l’articolo originale](" + source.url + ")";
       });
       const roundup = "## 📰 Intelligenza artificiale — ultimi 7 giorni\n\n" +
