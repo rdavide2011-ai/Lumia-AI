@@ -152,7 +152,7 @@ function shouldSearchWeb(messages) {
     "oggi", "attuale", "attualmente", "adesso", "notizie", "novità", "aggiornamento",
     "recente", "ultime", "ultimo", "ultima", "ultimi", "prezzo", "prezzi", "quanto costa",
     "costo", "disponibile", "rilascio", "cerca", "fonti", "verifica", "è vero", "e vero",
-    "informazioni su", "chi è", "chi e", "quando è", "quando e", "latest", "current",
+    "informazioni su", "chi è", "chi e", "quando è", "quando e", "sul web", "su internet", "online", "sito ufficiale", "documentazione", "non sai", "se non sai", "latest", "current",
     "today", "recent", "search the web", "look up", "find sources", "price of", "who is", "verify"
   ];
   return triggers.some(term => q.includes(term));
