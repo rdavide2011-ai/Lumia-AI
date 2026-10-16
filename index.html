@@ -411,10 +411,15 @@ body[data-theme="orange"]{background:radial-gradient(ellipse at 50% -20%,#81431d
   <div class="panel" id="memoryPanel" hidden>
     <h3>🧠 Memoria personale</h3><p class="muted">Lumia può usare le informazioni qui sotto e brevi estratti delle chat precedenti per ricordare preferenze e progetti. Le chat restano salvate in questo browser; gli estratti pertinenti vengono inviati al server quando chiedi una risposta.</p>
     <div class="settings-form">
-      <label for="personalMemory">Informazioni da ricordare</label>
+      <label class="check-row"><input type="checkbox" id="automaticMemoryEnabled" checked> Attiva memoria automatica</label>
+      <p class="muted">Quando è attiva, Lumia propone di ricordare preferenze e dettagli stabili emersi nelle chat. I ricordi restano su questo browser, puoi modificarli o cancellarli e non vengono condivisi tra dispositivi.</p>
+      <label for="automaticMemories">Ricordi automatici (uno per riga)</label>
+      <textarea class="field" id="automaticMemories" rows="5" maxlength="6000" placeholder="Lumia aggiungerà qui preferenze e dettagli utili..."></textarea>
+      <label for="personalMemory">Altre informazioni da ricordare manualmente</label>
       <textarea class="field" id="personalMemory" rows="4" maxlength="2000" placeholder="Es. Preferisco risposte in italiano, brevi e con passaggi numerati..."></textarea>
       <div class="status" id="memoryStats">Calcolo delle conversazioni salvate…</div>
       <button class="action" id="saveMemory">Salva memoria</button>
+      <button class="action secondary" id="clearAutomaticMemories">Cancella tutti i ricordi automatici</button>
       <button class="action secondary" id="exportChats">Esporta tutte le conversazioni (JSON)</button>
       <button class="action secondary" id="deleteAllChats">Elimina tutte le conversazioni</button>
     </div>
@@ -489,7 +494,7 @@ function getDeviceStorageKey(){
 }
 const STORAGE_KEY=getDeviceStorageKey();
 const SETTINGS_KEY="lumia_ai_preferences_v1";
-const DEFAULT_SETTINGS={accentColor:"purple",fontSize:"14",animationsEnabled:true,responseTone:"friendly",responseLength:"balanced",customInstructions:"",personalMemory:""};
+const DEFAULT_SETTINGS={accentColor:"purple",fontSize:"14",animationsEnabled:true,responseTone:"friendly",responseLength:"balanced",customInstructions:"",personalMemory:"",automaticMemoryEnabled:true,automaticMemories:[]};
 function loadSettings(){
   try{return {...DEFAULT_SETTINGS,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")}}catch{return {...DEFAULT_SETTINGS}}
 }
@@ -570,10 +575,44 @@ function openSettingsPanel(id){
   if(id==="aiInfoPanel")checkAiServiceStatus();
   $(id).scrollIntoView({behavior:settings.animationsEnabled?"smooth":"auto",block:"nearest"});
 }
+function getAutomaticMemories(){
+  return Array.isArray(settings.automaticMemories)
+    ? settings.automaticMemories.filter(x=>typeof x==="string"&&x.trim()).map(x=>x.trim().slice(0,180)).slice(0,30)
+    : [];
+}
+function renderAutomaticMemories(){
+  $("automaticMemoryEnabled").checked=settings.automaticMemoryEnabled!==false;
+  $("automaticMemories").value=getAutomaticMemories().join("\\n");
+}
 function updateMemoryStats(){
   const count=conversations.length;
   const messages=conversations.reduce((sum,c)=>sum+(Array.isArray(c.messages)?c.messages.length:0),0);
-  $("memoryStats").textContent=`Su questo browser: ${count} conversazioni, ${messages} messaggi. La memoria personale contiene ${(settings.personalMemory||"").length}/2000 caratteri.`;
+  const facts=getAutomaticMemories().length;
+  $("memoryStats").textContent=`Su questo browser: ${count} conversazioni, ${messages} messaggi. Ricordi automatici: ${facts}/30. Memoria manuale: ${(settings.personalMemory||"").length}/2000 caratteri.`;
+}
+async function learnMemories(messages){
+  if(settings.automaticMemoryEnabled===false||!Array.isArray(messages)||!messages.length)return;
+  try{
+    const response=await fetch("/api/memory/extract",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:messages.slice(-12),existingMemories:getAutomaticMemories()})
+    });
+    if(!response.ok)return;
+    const data=await response.json();
+    if(!Array.isArray(data.memories))return;
+    const combined=[...getAutomaticMemories()];
+    for(const value of data.memories){
+      if(typeof value!=="string")continue;
+      const fact=value.trim().replace(/^[-•*\\s]+/,"").slice(0,180);
+      if(!fact)continue;
+      if(!combined.some(old=>old.toLocaleLowerCase("it-IT")===fact.toLocaleLowerCase("it-IT")))combined.push(fact);
+    }
+    settings.automaticMemories=combined.slice(-30);
+    if(saveSettings()){
+      renderAutomaticMemories();
+      updateMemoryStats();
+    }
+  }catch(error){console.debug("Memoria automatica non aggiornata:",error)}
 }
 function current(){return conversations.find(c=>c.id===currentId)}
 function showWelcome(){ $("welcome").hidden=false;$("messages").hidden=true;$("messages").replaceChildren() }
@@ -641,7 +680,8 @@ async function sendMessage(raw){
   const thinkingLogo=({purple:"/logo.png",blue:"/logo-bluelettronico.png",pink:"/logo-rosaneon.png",mint:"/logo-verdementa.png",orange:"/logo-arancione.png"})[settings.accentColor]||"/logo.png";
   typing.innerHTML='<div class="thinking-avatar"><img class="thinking-logo" alt="Lumia sta pensando" src="'+thinkingLogo+'"></div><div class="message-body"><div class="message-name">Lumia AI</div><div class="message-text">Lumia sta pensando <span class="thinking-dots" aria-hidden="true"><span></span><span></span><span></span></span></div></div>';$("messages").append(typing);
   try{
-    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})),memoryContext:buildConversationMemory(c.id),preferences:{responseTone:settings.responseTone,responseLength:settings.responseLength,customInstructions:settings.customInstructions,personalMemory:settings.personalMemory}})});
+    const requestMessages=c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content}));
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:requestMessages,memoryContext:buildConversationMemory(c.id),preferences:{responseTone:settings.responseTone,responseLength:settings.responseLength,customInstructions:settings.customInstructions,personalMemory:settings.personalMemory,automaticMemories:getAutomaticMemories()}})});
     if(!r.ok){let t=await r.text();try{t=JSON.parse(t).error||t}catch{}throw Error(t||"Servizio AI non disponibile")}
     let answer="";
     if((r.headers.get("content-type")||"").includes("application/json")){const d=await r.json();answer=d.reply||d.response||d.message||""}
@@ -649,6 +689,7 @@ async function sendMessage(raw){
     else answer=await r.text();
     if(!answer.trim())throw Error("L'AI ha restituito una risposta vuota.");
     addMessage("assistant",answer);
+    if(settings.automaticMemoryEnabled!==false)await learnMemories(c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})));
     if(!c.manualTitle)updateTitle(c.id);
   }catch(e){addMessage("assistant","Non riesco a completare la risposta.\n"+e.message,{error:true})}
   finally{$("typing")?.remove();busy=false;$("send").disabled=false;$("prompt").disabled=false;$("newChat").disabled=false;$("prompt").focus()}
@@ -699,7 +740,15 @@ $("savePersonality").onclick=()=>{
 };
 $("saveMemory").onclick=()=>{
   settings.personalMemory=$("personalMemory").value.trim().slice(0,2000);
-  if(saveSettings()){updateMemoryStats();$("saveMemory").textContent="Salvato ✓";setTimeout(()=>$("saveMemory").textContent="Salva memoria",1500)}
+  settings.automaticMemoryEnabled=$("automaticMemoryEnabled").checked;
+  settings.automaticMemories=$("automaticMemories").value.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean).map(x=>x.slice(0,180)).slice(0,30);
+  if(saveSettings()){renderAutomaticMemories();updateMemoryStats();$("saveMemory").textContent="Salvato ✓";setTimeout(()=>$("saveMemory").textContent="Salva memoria",1500)}
+};
+$("clearAutomaticMemories").onclick=()=>{
+  if(!getAutomaticMemories().length){alert("Non ci sono ricordi automatici da cancellare.");return}
+  if(!confirm("Vuoi cancellare tutti i ricordi automatici salvati su questo browser?"))return;
+  settings.automaticMemories=[];
+  if(saveSettings()){renderAutomaticMemories();updateMemoryStats()}
 };
 $("exportChats").onclick=()=>{
   const payload={exportedAt:new Date().toISOString(),app:"Lumia AI",conversations,preferences:settings};
@@ -857,7 +906,7 @@ window.addEventListener("beforeunload",stopScanner);
   window.addEventListener("resize",updateVisibleViewport,{passive:true});
 })();
 
-applyAppearance();fillSettingsForm();renderHistory();showWelcome();
+applyAppearance();fillSettingsForm();renderAutomaticMemories();renderHistory();showWelcome();
 window.addEventListener("resize",applyAppearance);
 </script>
 </body>
