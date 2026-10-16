@@ -140,6 +140,25 @@ app.post("/api/memory/extract", async (req, res) => {
   }
 });
 
+
+const SEARXNG_URL = (process.env.SEARXNG_URL || "https://search.jeremyh.xyz").replace(/\\/+$/, "");
+function shouldSearchWeb(messages) {
+  const last = [...messages].reverse().find(m => m && m.role === "user" && typeof m.content === "string");
+  if (!last || last.content.trim().length < 5) return false;
+  return /\\b(oggi|attuale|attualmente|adesso|notizie|novità|aggiornamento|recente|ultim[oaie]|prezzi?|quanto costa|costo|disponibile|rilascio|cerca|fonti?|verifica|è vero|e vero|informazioni su|chi è|chi e|quando è|quando e|ultimo|ultima)\\b/i.test(last.content)
+    || /\\b(latest|current|today|recent|search the web|look up|find sources|price of|who is|verify)\\b/i.test(last.content);
+}
+async function searchWeb(query) {
+  const url = new URL(SEARXNG_URL + "/search");
+  url.searchParams.set("q", query.slice(0, 400));
+  url.searchParams.set("format", "json");
+  url.searchParams.set("language", "it-IT");
+  const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(10000) });
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  const data = await response.json();
+  return (Array.isArray(data.results) ? data.results : []).filter(x => x && typeof x.title === "string" && typeof x.url === "string" && /^https?:\\/\\//i.test(x.url)).slice(0, 5).map((x, i) => ({number:i+1,title:x.title.slice(0,240),url:x.url.slice(0,1500),snippet:String(x.content||x.description||"").slice(0,700)}));
+}
+
 /* Chat AI con streaming testuale. */
 app.post("/api/chat", async (req, res) => {
   try {
