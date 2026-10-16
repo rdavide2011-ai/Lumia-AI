@@ -603,7 +603,7 @@ async function learnMemories(messages){
     const combined=[...getAutomaticMemories()];
     for(const value of data.memories){
       if(typeof value!=="string")continue;
-      const fact=value.trim().replace(/^[-•*\\s]+/,"").slice(0,180);
+      const fact=value.trim().replace(/^[-•*\s]+/,"").slice(0,180);
       if(!fact)continue;
       if(!combined.some(old=>old.toLocaleLowerCase("it-IT")===fact.toLocaleLowerCase("it-IT")))combined.push(fact);
     }
@@ -741,7 +741,7 @@ $("savePersonality").onclick=()=>{
 $("saveMemory").onclick=()=>{
   settings.personalMemory=$("personalMemory").value.trim().slice(0,2000);
   settings.automaticMemoryEnabled=$("automaticMemoryEnabled").checked;
-  settings.automaticMemories=$("automaticMemories").value.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean).map(x=>x.slice(0,180)).slice(0,30);
+  settings.automaticMemories=$("automaticMemories").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(x=>x.slice(0,180)).slice(0,30);
   if(saveSettings()){renderAutomaticMemories();updateMemoryStats();$("saveMemory").textContent="Salvato ✓";setTimeout(()=>$("saveMemory").textContent="Salva memoria",1500)}
 };
 $("clearAutomaticMemories").onclick=()=>{
