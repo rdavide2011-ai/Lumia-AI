@@ -606,13 +606,42 @@ app.post("/api/chat", async (req, res) => {
     const isNewsRequest = /notizie|news|ultime|novit[aà]|sviluppi|ultimi\s+\d+\s+giorni/i.test(lastUserText);
     if (isNewsRequest && webResults.length) {
       const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const aiTopic = /intelligenza artificiale|\bartificial intelligence\b|\bAI\b|machine learning|deep learning|modello linguistico|LLM|OpenAI|ChatGPT|Anthropic|Claude|Gemini|Google DeepMind|Meta AI|NVIDIA|robotica|agente AI|agenti AI|generative AI|IA generativa/i;
       webResults = webResults.filter(source => {
         const match = source.url.match(/\/(20\d{2})\/(\d{1,2})\/(\d{1,2})(?:\/|$)/);
-        if (!match) return true;
-        const published = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-        return !Number.isNaN(published.getTime()) && published >= new Date(cutoff.getFullYear(), cutoff.getMonth(), cutoff.getDate());
+        const urlDateOkay = !match || (() => {
+          const published = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+          return !Number.isNaN(published.getTime()) && published >= new Date(cutoff.getFullYear(), cutoff.getMonth(), cutoff.getDate());
+        })();
+        return urlDateOkay && aiTopic.test(source.title + " " + source.snippet);
       }).map((source, index) => ({ ...source, number: index + 1 }));
     }
+    // Le rassegne recenti sono costruite direttamente dai risultati della ricerca:
+    // niente riassunti liberi che possano aggiungere nomi, cifre o eventi inventati.
+    if (isNewsRequest && webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).length >= 2) {
+      const datedSources = webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).slice(0, 5);
+      const dateLabel = value => new Date(value + "T12:00:00Z").toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric", timeZone: "Europe/Rome" });
+      const items = datedSources.map(source => {
+        let publisher = "";
+        try { publisher = new URL(source.url).hostname.replace(/^www\./i, ""); } catch {}
+        const dateType = source.dateSource === "Tavily" ? "data riportata dal motore di ricerca" : "data rilevata nella pagina";
+        return "### " + source.title + "\n" +
+          "**Data:** " + dateLabel(source.publishedDate) + " (" + dateType + ")" +
+          (publisher ? " · **Fonte:** " + publisher : "") + "\n\n" +
+          (source.snippet || "Nessun estratto disponibile.") +
+          "\n\n[Leggi l’articolo originale](" + source.url + ")";
+      });
+      const roundup = "## 📰 Intelligenza artificiale — ultimi 7 giorni\n\n" +
+        "Articoli recenti restituiti dalla ricerca. Per non attribuire alle fonti informazioni non presenti, riporto titolo ed estratto disponibili senza aggiungere un riassunto generato dal modello. La data è indicata come rilevata nella pagina oppure riportata dal motore di ricerca.\n\n" +
+        items.join("\n\n---\n\n");
+      res.status(200);
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.end(roundup);
+      return;
+    }
+
     const webContext = webResults.length
       ? "RISULTATI WEB (estratti, non necessariamente pagine complete):\n" + webResults.map(x => "[" + x.number + "] " + x.title + "\nURL: " + x.url + (x.publishedDate ? "\nData pubblicazione verificata: " + x.publishedDate : "") + "\nEstratto: " + x.snippet + (x.image ? "\nImmagine: " + x.image : "")).join("\n\n")
       : "";
