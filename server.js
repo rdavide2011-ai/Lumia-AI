@@ -269,70 +269,85 @@ async function searchWeb(query, options = {}) {
     return collected.slice(0, 5).map(({ _dedupeKey, ...item }, index) => ({ ...item, number: index + 1 }));
   };
 
-  // Ricerca notizie tramite Google News RSS: non richiede API key e include la data
-  // di pubblicazione indicata dal feed. È il percorso prioritario per le richieste recenti.
+  // Fonte primaria per le notizie: Google News RSS, gratuita e senza API key.
+  // Prova più query semplici: non passare al motore una frase lunga piena di istruzioni.
   if (options.recent) {
-    try {
-      const rssUrl = new URL("https://news.google.com/rss/search");
-      rssUrl.searchParams.set("q", (query + " when:7d").slice(0, 400));
-      rssUrl.searchParams.set("hl", "it");
-      rssUrl.searchParams.set("gl", "IT");
-      rssUrl.searchParams.set("ceid", "IT:it");
-      const rssResponse = await fetch(rssUrl, {
-        headers: { Accept: "application/rss+xml, application/xml, text/xml", "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
-        signal: AbortSignal.timeout(10000)
-      });
-      if (!rssResponse.ok) throw new Error("Google News RSS HTTP " + rssResponse.status);
-      const rss = await rssResponse.text();
-      const items = [];
-      const decodeXml = value => cleanText(String(value || "")
-        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-        .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
-        .replace(/&apos;/g, "'"));
-      const getTag = (block, tag) => {
-        const match = block.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
-        return match ? decodeXml(match[1]) : "";
-      };
-      for (const block of rss.split(/<item\b[^>]*>/i).slice(1)) {
-        if (items.length >= 10) break;
-        const itemBlock = block.split(/<\/item>/i)[0];
-        const title = getTag(itemBlock, "title");
-        const link = getTag(itemBlock, "link");
-        const pubDateText = getTag(itemBlock, "pubDate");
-        const source = getTag(itemBlock, "source");
-        const published = new Date(pubDateText);
-        if (!title || !/^https?:\/\//i.test(link) || Number.isNaN(published.getTime())) continue;
-        if (published.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000 || published.getTime() > Date.now() + 24 * 60 * 60 * 1000) continue;
-        let articleUrl = link;
-        // Google News links usually redirect to the publisher's actual article.
-        try {
-          const articleResponse = await fetch(link, {
-            headers: { "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)", Accept: "text/html" },
-            redirect: "follow",
-            signal: AbortSignal.timeout(4500)
-          });
-          if (articleResponse.url && /^https?:\/\//i.test(articleResponse.url) &&
-              !new URL(articleResponse.url).hostname.endsWith("news.google.com")) {
-            articleUrl = articleResponse.url;
-          }
-          if (articleResponse.body) await articleResponse.body.cancel().catch(() => {});
-        } catch {}
-        items.push({
-          number: items.length + 1,
-          title: title.replace(/\s+-\s+[^-]+$/, "").trim().slice(0, 240),
-          url: articleUrl.slice(0, 1500),
-          snippet: source ? "Testata: " + source : "Articolo trovato tramite Google News RSS.",
-          publishedDate: published.toISOString().slice(0, 10),
-          image: ""
+    const baseQuery = String(query || "")
+      .replace(/\s+articoli originali pubblicati dal[\s\S]*$/i, "")
+      .replace(/-tag|-categoria/gi, "")
+      .replace(/\s+/g, " ").trim();
+    const queries = [...new Set([
+      baseQuery + " when:7d",
+      baseQuery.replace(/\bultime?\s+notizie\b/ig, "").trim() + " AI intelligenza artificiale when:7d",
+      "intelligenza artificiale OR AI when:7d"
+    ])];
+    const rssItems = [];
+    const decodeXml = value => String(value || "")
+      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+      .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+      .replace(/&apos;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"')
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+    const tagValue = (block, tag) => {
+      const match = block.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
+      return match ? decodeXml(match[1]).replace(/<[^>]*>/g, "").trim() : "";
+    };
+    for (const rssQuery of queries) {
+      if (rssItems.length >= 5) break;
+      try {
+        const rssUrl = new URL("https://news.google.com/rss/search");
+        rssUrl.searchParams.set("q", rssQuery.slice(0, 250));
+        rssUrl.searchParams.set("hl", "it");
+        rssUrl.searchParams.set("gl", "IT");
+        rssUrl.searchParams.set("ceid", "IT:it");
+        const rssResponse = await fetch(rssUrl, {
+          headers: { Accept: "application/rss+xml, application/xml, text/xml", "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
+          signal: AbortSignal.timeout(9000)
         });
+        if (!rssResponse.ok) throw new Error("Google News RSS HTTP " + rssResponse.status);
+        const rss = await rssResponse.text();
+        for (const block of rss.split(/<item\b[^>]*>/i).slice(1)) {
+          if (rssItems.length >= 10) break;
+          const item = block.split(/<\/item>/i)[0];
+          const title = tagValue(item, "title");
+          const link = tagValue(item, "link");
+          const pubDate = new Date(tagValue(item, "pubDate"));
+          const source = tagValue(item, "source");
+          if (!title || !/^https?:\/\//i.test(link) || Number.isNaN(pubDate.getTime())) continue;
+          if (pubDate.getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000 || pubDate.getTime() > Date.now() + 24 * 60 * 60 * 1000) continue;
+          let articleUrl = link;
+          // Resolve Google News redirect when possible; keep the RSS link if a publisher blocks requests.
+          try {
+            const resolved = await fetch(link, {
+              headers: { "User-Agent": "Mozilla/5.0 (compatible; LumiaAI/1.0)" },
+              redirect: "follow",
+              signal: AbortSignal.timeout(3000)
+            });
+            if (resolved.url && /^https?:\/\//i.test(resolved.url) && new URL(resolved.url).hostname !== "news.google.com") {
+              articleUrl = resolved.url;
+            }
+            if (resolved.body) await resolved.body.cancel().catch(() => {});
+          } catch {}
+          const normalizedTitle = title.replace(/\s+-\s+[^-]+$/, "").trim().slice(0, 240);
+          if (rssItems.some(existing => existing.title.toLowerCase() === normalizedTitle.toLowerCase() || existing.url === articleUrl)) continue;
+          rssItems.push({
+            number: rssItems.length + 1,
+            title: normalizedTitle,
+            url: articleUrl.slice(0, 1500),
+            snippet: source ? "Testata: " + source : "Articolo trovato tramite Google News RSS.",
+            publishedDate: pubDate.toISOString().slice(0, 10),
+            image: ""
+          });
+        }
+      } catch (error) {
+        console.warn("Google News RSS query non disponibile:", error.message);
       }
-      const merged = mergeResults(items);
-      console.log("Google News RSS:", items.length, "articoli recenti trovati; unici:", merged.length);
-      if (merged.length >= 2) return merged;
-    } catch (error) {
-      console.warn("Google News RSS non disponibile:", error.message);
     }
+    if (rssItems.length >= 2) {
+      console.log("Google News RSS: articoli recenti con data nel feed:", rssItems.length);
+      return rssItems.slice(0, 5).map((item, index) => ({ ...item, number: index + 1 }));
+    }
+    console.warn("Google News RSS: trovati meno di due articoli recenti; provo gli altri motori.");
   }
 
   const instances = [...new Set([SEARXNG_URL, "https://searx.be", "https://search.sapti.me", "https://searx.tiekoetter.com"])];
