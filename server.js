@@ -259,7 +259,7 @@ async function searchWeb(query, options = {}) {
         for (const param of [...parsed.searchParams.keys()]) {
           if (/^(?:utm_.+|fbclid|gclid|ref|source)$/i.test(param)) parsed.searchParams.delete(param);
         }
-        key = parsed.toString().replace(/\\/$/, "");
+        key = parsed.toString().replace(/\/$/, "");
       } catch {}
       if (collected.some(existing => existing._dedupeKey === key)) continue;
       collected.push({ ...item, _dedupeKey: key });
