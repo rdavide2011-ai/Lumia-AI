@@ -689,7 +689,7 @@ async function sendMessage(raw){
     else answer=await r.text();
     if(!answer.trim())throw Error("L'AI ha restituito una risposta vuota.");
     addMessage("assistant",answer);
-    if(settings.automaticMemoryEnabled!==false)await learnMemories(c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})));
+    if(settings.automaticMemoryEnabled!==false)learnMemories(c.messages.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})));
     if(!c.manualTitle)updateTitle(c.id);
   }catch(e){addMessage("assistant","Non riesco a completare la risposta.\n"+e.message,{error:true})}
   finally{$("typing")?.remove();busy=false;$("send").disabled=false;$("prompt").disabled=false;$("newChat").disabled=false;$("prompt").focus()}
