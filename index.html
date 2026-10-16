@@ -643,7 +643,11 @@ function renderRichText(container, source){
     let s=escapeHtml(value);
     s=s.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g,(all,alt,url)=>{const safe=safeUrl(url);return safe?'<img class="chat-inline-image" src="'+escapeHtml(safe)+'" alt="'+alt+'" loading="lazy" referrerpolicy="no-referrer">':alt;});
     s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(all,label,url)=>{const safe=safeUrl(url);return safe?'<a href="'+escapeHtml(safe)+'" target="_blank" rel="noopener noreferrer">'+label+'</a>':label;});
-    s=s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/(^|\s)\*([^*\n]+)\*(?=\s|$)/g,"$1<em>$2</em>");
+    s=s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    s=s.replace(/(^|\s)\\\*([^*\\n]+)\\\*(?=\\s|$)/g,"$1$2");
+    s=s.replace(/(^|\\s)\\*([^*\\n]+)\\*(?=\\s|$)/g,"$1$2");
+    s=s.replace(/(^|\\s)\\*([^*\\n]+)\\*(?=\\s|$)/g,"$1$2");
+    s=s.replace(/(^|\\s)\*([^*\n]+)\*(?=\s|$)/g,"$1$2");
     return s;
   };
   const flushParagraph=()=>{if(!paragraph.length)return;const p=document.createElement("p");p.innerHTML=inline(paragraph.join(" "));container.append(p);paragraph=[];};
