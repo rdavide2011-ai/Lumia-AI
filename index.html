@@ -637,7 +637,7 @@ function renderHistory(){
 function renderRichText(container, source){
   const escapeHtml = value => String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const safeUrl = value => { try { const u=new URL(value,location.origin); return ["https:","http:"].includes(u.protocol)?u.href:null; } catch { return null; } };
-  const normalizeMarkdown = value => String(value || "").replace(/\r/g,"").replace(/\\([*#_])/g,"$1");
+  const normalizeMarkdown = value => String(value || "").replace(/\r/g,"").replace(/\\\|/g,"|").replace(/\\([*#_])/g,"$1");
   const lines=normalizeMarkdown(source).split("\n");
   let list=null, paragraph=[], tableRows=[], inCode=false, codeLines=[];
   const inline=value=>{
