@@ -217,7 +217,21 @@ async function searchWeb(query, options = {}) {
     return null;
   };
 
-  // Verifica URL, disponibilità e data editoriale prima di usare una fonte.
+  // Per le rassegne recenti accettiamo soltanto testate giornalistiche selezionate.
+  // Una fonte che blocca la verifica automatica viene esclusa, non aggiunta per fiducia.
+  const trustedNewsDomains = [
+    "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk", "theguardian.com",
+    "nytimes.com", "washingtonpost.com", "cnbc.com", "bloomberg.com", "ft.com",
+    "techcrunch.com", "theverge.com", "wired.com", "arstechnica.com", "technologyreview.com",
+    "nature.com", "science.org", "axios.com", "npr.org", "dw.com", "euronews.com",
+    "france24.com", "politico.eu", "engadget.com", "zdnet.com", "venturebeat.com",
+    "computerworld.com", "fortune.com", "businessinsider.com", "ansa.it", "ilsole24ore.com",
+    "corriere.it", "repubblica.it", "wired.it", "dday.it", "hdblog.it", "punto-informatico.it",
+    "ilmessaggero.it", "rainews.it", "agi.it", "key4biz.it", "tio.ch"
+  ];
+  const isTrustedNewsDomain = hostname => trustedNewsDomains.some(domain =>
+    hostname === domain || hostname.endsWith("." + domain)
+  );
   const verifyResults = async results => {
     const checked = await Promise.all((Array.isArray(results) ? results : []).map(async item => {
       try {
@@ -225,10 +239,15 @@ async function searchWeb(query, options = {}) {
           method: "GET",
           headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36" },
           redirect: "follow",
-          signal: AbortSignal.timeout(options.recent ? 6500 : 4500)
+          signal: AbortSignal.timeout(options.recent ? 8000 : 4500)
         });
         if (response.status === 404 || response.status === 410 || !response.ok) return null;
         if (response.url && /^https?:\/\//i.test(response.url)) item.url = response.url;
+        const finalUrl = new URL(item.url);
+        if (options.recent && !isTrustedNewsDomain(finalUrl.hostname.toLowerCase())) {
+          console.warn("Notizia esclusa: testata non presente nell'elenco editoriale:", item.url);
+          return null;
+        }
         const contentType = response.headers.get("content-type") || "";
         if (!contentType.includes("text/html")) return options.recent ? null : item;
         const html = (await response.text()).slice(0, 1500000);
@@ -238,12 +257,41 @@ async function searchWeb(query, options = {}) {
             console.warn("Notizia esclusa: data assente, non verificabile o fuori intervallo:", item.url);
             return null;
           }
+          const readMeta = names => {
+            for (const tag of html.match(/<meta\b[^>]*>/gi) || []) {
+              const key = (tag.match(/(?:property|name)=["']([^"']+)["']/i) || [])[1] || "";
+              const value = (tag.match(/content=["']([^"']*)["']/i) || [])[1] || "";
+              if (names.includes(key.toLowerCase()) && value) return cleanText(value);
+            }
+            return "";
+          };
+          const pageTitle = readMeta(["og:title", "twitter:title"]) ||
+            cleanText((html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
+          const pageDescription = readMeta(["og:description", "description", "twitter:description"]);
+          const articleText = cleanText(html).slice(0, 50000);
+          const aiTerms = /intelligenza artificiale|artificial intelligence|\bAI\b|\bIA\b|machine learning|deep learning|\bLLM\b|ChatGPT|OpenAI|Anthropic|Claude|Gemini|DeepMind|Meta AI|agenti? IA|AI agents?|generative AI|IA generativa/i;
+          if (!aiTerms.test((pageTitle + " " + pageDescription + " " + articleText).slice(0, 30000))) {
+            console.warn("Notizia esclusa: la pagina originale non conferma il tema IA:", item.url);
+            return null;
+          }
+          const titleWords = cleanText(item.title).toLowerCase().match(/[a-zà-ÿ0-9]{4,}/gi) || [];
+          const stopWords = new Set(["intelligenza", "artificiale", "artificial", "intelligence", "nuovo", "nuova", "ultime", "notizie", "secondo", "dopo", "come", "dalla", "delle", "degli", "della", "nelle", "sulle", "this", "that", "with", "from", "about", "after", "over"]);
+          const keyWords = [...new Set(titleWords.filter(word => !stopWords.has(word)))].slice(0, 8);
+          const pageEvidence = (pageTitle + " " + pageDescription + " " + articleText.slice(0, 12000)).toLowerCase();
+          const matchedWords = keyWords.filter(word => pageEvidence.includes(word)).length;
+          if (keyWords.length >= 3 && matchedWords < 2) {
+            console.warn("Notizia esclusa: titolo e contenuto della pagina non coincidono:", item.url);
+            return null;
+          }
           item.publishedDate = published.toISOString().slice(0, 10);
+          if (pageDescription && pageDescription.length >= 45) item.snippet = pageDescription.slice(0, 700);
+          item.title = (pageTitle || item.title).replace(/\s*[|–—-]\s*(?:Reuters|AP News|BBC News|The Guardian|The Verge|TechCrunch|Wired|ANSA|Il Sole 24 ORE|Corriere della Sera|la Repubblica).*$/i, "").slice(0, 240) || item.title;
+          item.dateSource = "pagina originale";
         }
         return item;
-      } catch {
-        if (options.recent) return null;
-        return item;
+      } catch (error) {
+        console.warn("Notizia esclusa: verifica della pagina non riuscita:", item.url, error.message);
+        return options.recent ? null : item;
       }
     }));
     return checked.filter(Boolean).map((item, index) => ({ ...item, number: index + 1 }));
@@ -360,24 +408,7 @@ async function searchWeb(query, options = {}) {
       let verifiedApiResults = options.recent
         ? await verifyResults(diverseApiResults)
         : diverseApiResults;
-      // Alcune testate bloccano i fetch automatici o non espongono i meta tag.
-      // Conserva quindi anche risultati con data esplicita fornita da Tavily,
-      // purché entro la settimana, con URL di articolo e snippet sostanziale.
-      if (options.recent && verifiedApiResults.length < 2) {
-        const already = new Set(verifiedApiResults.map(item => item.url));
-        const apiDatedFallback = diverseApiResults.filter(item =>
-          item.publishedDate && item.title.length >= 18 && item.snippet.length >= 80 && !already.has(item.url)
-        ).map(item => ({ ...item, dateSource: "Tavily" }));
-        for (const item of apiDatedFallback) {
-          if (verifiedApiResults.length >= 5) break;
-          let host;
-          try { host = new URL(item.url).hostname.replace(/^www\\./i, ""); } catch { continue; }
-          if (verifiedApiResults.some(existing => {
-            try { return new URL(existing.url).hostname.replace(/^www\\./i, "") === host; } catch { return false; }
-          })) continue;
-          verifiedApiResults.push(item);
-        }
-      }
+      // Nessun fallback non verificato: se la pagina non si può controllare, l'articolo è escluso.
       const apiMerged = mergeResults(verifiedApiResults);
       console.log("Tavily API: risultati ricevuti:", Array.isArray(data.results) ? data.results.length : 0,
         "- candidati validi:", apiResults.length, "- dopo verifica pagina:", verifiedApiResults.length,
