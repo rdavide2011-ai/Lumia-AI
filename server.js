@@ -732,7 +732,7 @@ app.post("/api/chat", async (req, res) => {
           const summaryData = await summaryResponse.json();
           const summary = String(summaryData?.result?.response || "").trim();
           // Non mostrare riassunti tagliati a metà frase: meglio scartare una notizia incompleta.
-          if (summary.length < 100 || !/[.!?]["'»”)]?\\s*$/.test(summary)) {
+          if (summary.length < 100 || !/[.!?]["'»”)]?\s*$/.test(summary)) {
             console.warn("Riassunto escluso perché troppo breve o probabilmente troncato:", article.title);
             return null;
           }
