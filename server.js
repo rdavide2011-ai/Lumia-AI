@@ -716,6 +716,7 @@ app.post("/api/chat", async (req, res) => {
         title: source.title,
         date: dateLabel(source.publishedDate),
         source: (() => { try { return new URL(source.url).hostname.replace(/^www\./i, ""); } catch { return "fonte giornalistica"; } })(),
+        url: source.url,
         articleText: source.articleText.slice(0, 5500)
       }));
       // Genera un riassunto per articolo: titolo, data e fonte vengono aggiunti dal server
