@@ -718,32 +718,36 @@ app.post("/api/chat", async (req, res) => {
         source: (() => { try { return new URL(source.url).hostname.replace(/^www\./i, ""); } catch { return "fonte giornalistica"; } })(),
         articleText: source.articleText.slice(0, 5500)
       }));
-      let summaries = "";
-      try {
-        const summaryResponse = await callCloudflare([{
-          role: "system",
-          content: "Sei un giornalista che spiega le notizie in italiano semplice e preciso. Riassumi SOLO i fatti presenti nel testo fornito. Non inventare dettagli, conseguenze, numeri, citazioni o innovazioni che il testo non conferma. Per ogni articolo scrivi 3-5 frasi concrete: che cosa è successo, chi è coinvolto, quali novità introduce e perché è rilevante solo quando il testo lo spiega. Se il testo non spiega un aspetto, non indovinarlo. Non parlare di link, ricerca, estratti o limiti tecnici. Non aggiungere URL. Mantieni l'ordine degli articoli e usa i titoli originali."
-        }, {
-          role: "user",
-          content: "Spiega queste notizie in modo che il lettore capisca cosa è successo senza aprire altre pagine. Per ogni notizia usa il titolo originale e un paragrafo informativo di 3-5 frasi basato sul testo. Se i dettagli sono insufficienti, dillo chiaramente invece di inventare.\n\n" + JSON.stringify(articlesForModel)
-        }], { max_tokens: 1800, temperature: 0.2, stream: false, timeout: 90000 });
-        const summaryData = await summaryResponse.json();
-        summaries = summaryData?.result?.response || "";
-      } catch (error) {
-        console.error("Riassunto delle notizie non riuscito:", error.message);
-      }
-      if (!summaries.trim()) {
+      // Genera un riassunto per articolo: titolo, data e fonte vengono aggiunti dal server
+      // e non possono finire associati alla notizia sbagliata.
+      const summaries = await Promise.all(articlesForModel.map(async article => {
+        try {
+          const summaryResponse = await callCloudflare([{
+            role: "system",
+            content: "Sei un giornalista che spiega le notizie in italiano semplice e preciso. Riassumi SOLO i fatti presenti nel testo fornito. Non inventare dettagli, conseguenze, numeri, citazioni o innovazioni che il testo non conferma. Scrivi 3-5 frasi concrete spiegando che cosa è successo, chi è coinvolto, quali novità introduce e perché è rilevante solo quando il testo lo spiega. Non ripetere il titolo, non scrivere date o fonti, non aggiungere link e non parlare della ricerca. Se il testo non supporta un dettaglio, omettilo."
+          }, {
+            role: "user",
+            content: "Titolo dell'articolo: " + article.title + "\n\nTesto originale della pagina:\n" + article.articleText
+          }], { max_tokens: 420, temperature: 0.15, stream: false, timeout: 90000 });
+          const summaryData = await summaryResponse.json();
+          const summary = String(summaryData?.result?.response || "").trim();
+          if (summary.length < 100) return null;
+          return "### " + article.title + "\n\n**Data:** " + article.date + " · **Fonte:** " + article.source + "\n\n" + summary;
+        } catch (error) {
+          console.error("Riassunto non riuscito per articolo:", article.title, error.message);
+          return null;
+        }
+      }));
+      const validSummaries = summaries.filter(Boolean);
+      if (validSummaries.length < 2) {
         res.status(200);
         res.setHeader("Content-Type", "text/plain; charset=utf-8");
         res.setHeader("Cache-Control", "no-cache, no-transform");
-        res.end("Ho trovato gli articoli, ma non sono riuscito a prepararne un riassunto affidabile in questo momento. Riprova tra poco.");
+        res.end("Non sono riuscito a preparare almeno due riassunti affidabili dagli articoli originali. Riprova tra poco.");
         return;
       }
       const roundup = "## 📰 Intelligenza artificiale — ultimi 7 giorni\n\n" +
-        summaries.trim() + "\n\n" +
-        articlesForModel.map(article =>
-          "---\n\n**Data:** " + article.date + " · **Fonte:** " + article.source
-        ).join("\n\n");
+        validSummaries.join("\n\n---\n\n");
       res.status(200);
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
