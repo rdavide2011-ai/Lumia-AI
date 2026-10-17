@@ -268,7 +268,11 @@ async function searchWeb(query, options = {}) {
           const pageTitle = readMeta(["og:title", "twitter:title"]) ||
             cleanText((html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
           const pageDescription = readMeta(["og:description", "description", "twitter:description"]);
-          const articleText = cleanText(html).slice(0, 50000);
+          // Estrai testo utile riducendo menu, navigazione e contenuti non editoriali.
+          const articleHtml = html
+            .replace(/<(script|style|noscript|svg|nav|header|footer|aside|form|button)\b[\s\S]*?<\/\1>/gi, " ")
+            .replace(/<[^>]+(?:class|id)=["'][^"']*(?:menu|nav|cookie|newsletter|social|related|recommend|breadcrumb|footer|header|advert|promo|most-read|popular)[^"']*["'][^>]*>[\s\S]*?<\/[^>]+>/gi, " ");
+          const articleText = cleanText(articleHtml).slice(0, 50000);
           const aiTerms = /intelligenza artificiale|artificial intelligence|\bAI\b|\bIA\b|machine learning|deep learning|\bLLM\b|ChatGPT|OpenAI|Anthropic|Claude|Gemini|DeepMind|Meta AI|agenti? IA|AI agents?|generative AI|IA generativa/i;
           if (!aiTerms.test((pageTitle + " " + pageDescription + " " + articleText).slice(0, 30000))) {
             console.warn("Notizia esclusa: la pagina originale non conferma il tema IA:", item.url);
@@ -310,6 +314,11 @@ async function searchWeb(query, options = {}) {
             console.warn("Notizia esclusa: titolo o estratto non utilizzabile/completo:", item.url);
             return null;
           }
+          if (articleText.length < 700) {
+            console.warn("Notizia esclusa: la pagina non contiene abbastanza testo editoriale per un riassunto affidabile:", item.url);
+            return null;
+          }
+          item.articleText = articleText.slice(0, 6500);
           item.dateSource = "pagina originale";
         }
         return item;
@@ -688,30 +697,53 @@ app.post("/api/chat", async (req, res) => {
         return urlDateOkay && aiTopic.test(source.title + " " + source.snippet);
       }).map((source, index) => ({ ...source, number: index + 1 }));
     }
-    // Le rassegne recenti sono costruite direttamente dai risultati della ricerca:
-    // niente riassunti liberi che possano aggiungere nomi, cifre o eventi inventati.
+    // La rassegna usa il testo della pagina originale per spiegare le notizie,
+    // senza costringere l'utente ad aprire ogni articolo per capirle.
     if (isNewsRequest && webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).length >= 2) {
-      const datedSources = webResults.filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "")).slice(0, 5);
+      const datedSources = webResults
+        .filter(source => /^\d{4}-\d{2}-\d{2}$/.test(source.publishedDate || "") && source.articleText && source.articleText.length >= 700)
+        .slice(0, 4);
+      if (datedSources.length < 2) {
+        res.status(200);
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.end("Non ho trovato almeno due articoli recenti con abbastanza testo originale per spiegarti con affidabilità che cosa è successo. Preferisco non inventare dettagli.");
+        return;
+      }
       const dateLabel = value => new Date(value + "T12:00:00Z").toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric", timeZone: "Europe/Rome" });
-      const items = datedSources.map(source => {
-        let publisher = "";
-        try { publisher = new URL(source.url).hostname.replace(/^www\./i, ""); } catch {}
-        const dateType = source.dateSource === "Tavily" ? "data riportata dal motore di ricerca" : "data rilevata nella pagina";
-        const cleanSnippet = String(source.snippet || "")
-          .replace(/\s+/g, " ")
-          .replace(/(?:Show more|Advertisement|Skip next section|In the spotlight)[\s\S]*$/i, "")
-          .replace(/(?:Ultimi articoli|Più letti|Home Notizie)[\s\S]*$/i, "")
-          .trim()
-          .slice(0, 650);
-        return "### " + source.title + "\n" +
-          "**Data:** " + dateLabel(source.publishedDate) + " (" + dateType + ")" +
-          (publisher ? " · **Fonte:** " + publisher : "") + "\n\n" +
-          (cleanSnippet || "L’estratto disponibile non è sufficiente per riassumere l’articolo in modo affidabile.") +
-          "\n\n[Leggi l’articolo originale](" + source.url + ")";
-      });
+      const articlesForModel = datedSources.map((source, index) => ({
+        id: index + 1,
+        title: source.title,
+        date: dateLabel(source.publishedDate),
+        source: (() => { try { return new URL(source.url).hostname.replace(/^www\./i, ""); } catch { return "fonte giornalistica"; } })(),
+        articleText: source.articleText.slice(0, 5500)
+      }));
+      let summaries = "";
+      try {
+        const summaryResponse = await callCloudflare([{
+          role: "system",
+          content: "Sei un giornalista che spiega le notizie in italiano semplice e preciso. Riassumi SOLO i fatti presenti nel testo fornito. Non inventare dettagli, conseguenze, numeri, citazioni o innovazioni che il testo non conferma. Per ogni articolo scrivi 3-5 frasi concrete: che cosa è successo, chi è coinvolto, quali novità introduce e perché è rilevante solo quando il testo lo spiega. Se il testo non spiega un aspetto, non indovinarlo. Non parlare di link, ricerca, estratti o limiti tecnici. Non aggiungere URL. Mantieni l'ordine degli articoli e usa i titoli originali."
+        }, {
+          role: "user",
+          content: "Spiega queste notizie in modo che il lettore capisca cosa è successo senza aprire altre pagine. Per ogni notizia usa il titolo originale e un paragrafo informativo di 3-5 frasi basato sul testo. Se i dettagli sono insufficienti, dillo chiaramente invece di inventare.\n\n" + JSON.stringify(articlesForModel)
+        }], { max_tokens: 1800, temperature: 0.2, stream: false, timeout: 90000 });
+        const summaryData = await summaryResponse.json();
+        summaries = summaryData?.result?.response || "";
+      } catch (error) {
+        console.error("Riassunto delle notizie non riuscito:", error.message);
+      }
+      if (!summaries.trim()) {
+        res.status(200);
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.end("Ho trovato gli articoli, ma non sono riuscito a prepararne un riassunto affidabile in questo momento. Riprova tra poco.");
+        return;
+      }
       const roundup = "## 📰 Intelligenza artificiale — ultimi 7 giorni\n\n" +
-        "Articoli recenti restituiti dalla ricerca. Per non attribuire alle fonti informazioni non presenti, riporto titolo ed estratto disponibili senza aggiungere un riassunto generato dal modello. La data è indicata come rilevata nella pagina oppure riportata dal motore di ricerca.\n\n" +
-        items.join("\n\n---\n\n");
+        summaries.trim() + "\n\n" +
+        articlesForModel.map(article =>
+          "---\n\n**Data:** " + article.date + " · **Fonte:** " + article.source
+        ).join("\n\n");
       res.status(200);
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.setHeader("Cache-Control", "no-cache, no-transform");
