@@ -303,8 +303,11 @@ async function searchWeb(query, options = {}) {
               .slice(0, 500)
               .trim();
           }
-          if (item.title.length < 12 || item.snippet.length < 45 || noisyExcerpt.test(item.snippet)) {
-            console.warn("Notizia esclusa: titolo o estratto non utilizzabile:", item.url);
+          // Gli estratti troncati a metà frase non devono essere mostrati come se fossero completi.
+          const incompleteExcerpt = /(?:\\.{3,}|…|\\b(?:il|lo|la|i|gli|le|un|uno|una|di|a|da|in|con|su|per|tra|fra|che|e|ma|non|come|ancora|quindi|fondamentalmente))\\s*$/i;
+          if (item.title.length < 12 || item.snippet.length < 45 || noisyExcerpt.test(item.snippet) ||
+              incompleteExcerpt.test(item.snippet)) {
+            console.warn("Notizia esclusa: titolo o estratto non utilizzabile/completo:", item.url);
             return null;
           }
           item.dateSource = "pagina originale";
