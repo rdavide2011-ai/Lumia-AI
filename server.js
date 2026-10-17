@@ -736,7 +736,7 @@ app.post("/api/chat", async (req, res) => {
             console.warn("Riassunto escluso perché troppo breve o probabilmente troncato:", article.title);
             return null;
           }
-          return "### " + article.title + "\n\n**Data:** " + article.date + " · **Fonte:** " + article.source + "\n\n" + summary;
+          return "### " + article.title + "\n\n**Data:** " + article.date + " · **Fonte:** [" + article.source + "](" + article.url + ")\n\n" + summary;
         } catch (error) {
           console.error("Riassunto non riuscito per articolo:", article.title, error.message);
           return null;
