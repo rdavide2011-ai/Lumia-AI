@@ -284,8 +284,29 @@ async function searchWeb(query, options = {}) {
             return null;
           }
           item.publishedDate = published.toISOString().slice(0, 10);
-          if (pageDescription && pageDescription.length >= 45) item.snippet = pageDescription.slice(0, 700);
-          item.title = (pageTitle || item.title).replace(/\s*[|–—-]\s*(?:Reuters|AP News|BBC News|The Guardian|The Verge|TechCrunch|Wired|ANSA|Il Sole 24 ORE|Corriere della Sera|la Repubblica).*$/i, "").slice(0, 240) || item.title;
+          // Non sostituire il titolo del motore con metadati incompleti (es. "L").
+          const normalizedPageTitle = cleanText(pageTitle)
+            .replace(/\s*[|–—-]\s*(?:Reuters|AP News|BBC News|The Guardian|The Verge|TechCrunch|Wired|ANSA|Il Sole 24 ORE|Corriere della Sera|la Repubblica).*$/i, "")
+            .trim();
+          const normalizedSearchTitle = cleanText(item.title).trim();
+          const usablePageTitle = normalizedPageTitle.length >= 18 &&
+            !/^(home|homepage|news|notizie|artificial intelligence|intelligenza artificiale|[a-z])$/i.test(normalizedPageTitle);
+          item.title = (usablePageTitle ? normalizedPageTitle : normalizedSearchTitle).slice(0, 240);
+          // Preferisci una descrizione editoriale solo se non è un estratto di menu o pagina aggregatrice.
+          const noisyExcerpt = /(?:precedente|successivo|ultimi articoli|più letti|entra nel canale|iscriviti alla newsletter|advertisement|skip next section|in the spotlight)/i;
+          if (pageDescription && pageDescription.length >= 45 && pageDescription.length <= 500 &&
+              !noisyExcerpt.test(pageDescription)) {
+            item.snippet = pageDescription.slice(0, 500);
+          } else {
+            item.snippet = cleanText(item.snippet)
+              .replace(/(?:precedente|successivo|ultimi articoli|più letti|entra nel canale|iscriviti alla newsletter|advertisement|skip next section|in the spotlight)[\s\S]*$/i, "")
+              .slice(0, 500)
+              .trim();
+          }
+          if (item.title.length < 12 || item.snippet.length < 45 || noisyExcerpt.test(item.snippet)) {
+            console.warn("Notizia esclusa: titolo o estratto non utilizzabile:", item.url);
+            return null;
+          }
           item.dateSource = "pagina originale";
         }
         return item;
