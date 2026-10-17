@@ -728,10 +728,14 @@ app.post("/api/chat", async (req, res) => {
           }, {
             role: "user",
             content: "Titolo dell'articolo: " + article.title + "\n\nTesto originale della pagina:\n" + article.articleText
-          }], { max_tokens: 420, temperature: 0.15, stream: false, timeout: 90000 });
+          }], { max_tokens: 600, temperature: 0.15, stream: false, timeout: 90000 });
           const summaryData = await summaryResponse.json();
           const summary = String(summaryData?.result?.response || "").trim();
-          if (summary.length < 100) return null;
+          // Non mostrare riassunti tagliati a metà frase: meglio scartare una notizia incompleta.
+          if (summary.length < 100 || !/[.!?]["'»”)]?\\s*$/.test(summary)) {
+            console.warn("Riassunto escluso perché troppo breve o probabilmente troncato:", article.title);
+            return null;
+          }
           return "### " + article.title + "\n\n**Data:** " + article.date + " · **Fonte:** " + article.source + "\n\n" + summary;
         } catch (error) {
           console.error("Riassunto non riuscito per articolo:", article.title, error.message);
